@@ -87,6 +87,16 @@ export async function createAsset(req: Request, res: Response): Promise<void> {
     },
   });
 
+  await prisma.activityLog.create({
+    data: {
+      action: "CREATED",
+      assetId: asset.id,
+      assetName: asset.namaAset,
+      assetNomor: asset.nomorAset,
+      details: `Aset baru ditambahkan — kategori ${asset.kategori}, kondisi ${asset.kondisi}`,
+    },
+  });
+
   res.status(201).json(asset);
 }
 
@@ -128,6 +138,16 @@ export async function updateAsset(req: Request, res: Response): Promise<void> {
     },
   });
 
+  await prisma.activityLog.create({
+    data: {
+      action: "UPDATED",
+      assetId: asset.id,
+      assetName: asset.namaAset,
+      assetNomor: asset.nomorAset,
+      details: "Data aset diperbarui",
+    },
+  });
+
   res.json(asset);
 }
 
@@ -142,6 +162,17 @@ export async function deleteAsset(req: Request, res: Response): Promise<void> {
   }
 
   await prisma.asset.delete({ where: { id } });
+
+  await prisma.activityLog.create({
+    data: {
+      action: "DELETED",
+      assetId: null,
+      assetName: existing.namaAset,
+      assetNomor: existing.nomorAset,
+      details: "Aset dihapus dari sistem",
+    },
+  });
+
   res.status(204).send();
 }
 
@@ -168,6 +199,16 @@ export async function uploadPhoto(req: Request, res: Response): Promise<void> {
     data: {
       gambar,
       fotoTimestamp: new Date(),
+    },
+  });
+
+  await prisma.activityLog.create({
+    data: {
+      action: "PHOTO_UPLOADED",
+      assetId: asset.id,
+      assetName: asset.namaAset,
+      assetNomor: asset.nomorAset,
+      details: "Foto aset diperbarui",
     },
   });
 

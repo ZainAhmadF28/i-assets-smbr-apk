@@ -617,13 +617,13 @@ export default function HomePage() {
             </Text>
           </View>
 
-          {/* Cari */}
+          {/* Log Aktivitas */}
           <TouchableOpacity
             className="items-center px-3 py-1"
-            onPress={() => router.push("/(admin)/dashboard")}
+            onPress={() => router.push("/(guest)/activity-log" as any)}
           >
-            <Feather name="search" size={20} color="#94a3b8" />
-            <Text className="text-[10px] font-medium text-slate-400">Cari</Text>
+            <Feather name="activity" size={20} color="#94a3b8" />
+            <Text className="text-[10px] font-medium text-slate-400">Log</Text>
           </TouchableOpacity>
 
           {/* Admin */}

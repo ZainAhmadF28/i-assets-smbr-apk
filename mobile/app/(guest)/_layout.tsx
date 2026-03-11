@@ -13,6 +13,7 @@ export default function GuestLayout() {
     >
       <Stack.Screen name="scan" options={{ title: "Scan QR Code" }} />
       <Stack.Screen name="asset/[id]" options={{ title: "Detail Aset" }} />
+      <Stack.Screen name="activity-log" options={{ title: "Log Aktivitas" }} />
     </Stack>
   );
 }

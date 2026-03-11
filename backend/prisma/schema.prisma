@@ -56,3 +56,22 @@ model Asset {
   @@index([kategori])
   @@index([kondisi])
 }
+
+enum ActivityAction {
+  CREATED
+  UPDATED
+  DELETED
+  PHOTO_UPLOADED
+}
+
+model ActivityLog {
+  id         String         @id @default(cuid())
+  action     ActivityAction
+  assetId    String?
+  assetName  String
+  assetNomor String
+  details    String?
+  createdAt  DateTime       @default(now())
+
+  @@index([createdAt])
+}
