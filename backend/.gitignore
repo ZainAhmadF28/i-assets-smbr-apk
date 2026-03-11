@@ -1,0 +1,37 @@
+# ============================================================
+# Backend .gitignore
+# ============================================================
+
+# ── Dependencies ──
+node_modules/
+
+# ── Build Output ──
+dist/
+
+# ── Uploaded Files (user-generated, besar, bukan source code) ──
+uploads/
+data/
+
+# ── Environment / Secrets (HARAM DIPUSH) ──
+.env
+.env.local
+.env.*.local
+
+# ── Prisma Generated ──
+/generated/prisma
+
+# ── Logs ──
+*.log
+
+# ── Debug / Test Scripts (berisi password hardcoded dll) ──
+test-*.js
+debug-*.js
+
+# ── OS Files ──
+.DS_Store
+Thumbs.db
+
+# ── Signing & Certificates ──
+*.pem
+*.key
+*.p12

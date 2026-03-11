@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "I-Asset SMBR",
+    "slug": "i-asset-smbr",
+    "version": "1.0.0",
+    "scheme": "iasset",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a7fd4"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.smbr.iasset"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.smbr.iasset"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-camera",
+      "expo-barcode-scanner",
+      "expo-sharing",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "I-Asset SMBR membutuhkan akses lokasi untuk menandai posisi aset."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "I-Asset SMBR membutuhkan akses galeri untuk foto aset.",
+          "cameraPermission": "I-Asset SMBR membutuhkan akses kamera untuk foto aset."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

@@ -1,0 +1,58 @@
+// I-Asset SMBR — Prisma Schema
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+}
+
+enum Kategori {
+  BANGUNAN
+  KENDARAAN_DINAS
+  PERLENGKAPAN
+  TANAH
+}
+
+enum Kondisi {
+  BAIK
+  RUSAK
+  RUSAK_BERAT
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  role      Role     @default(ADMIN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Asset {
+  id            String    @id @default(cuid())
+  nomorAset     String    @unique
+  namaAset      String
+  kategori      Kategori
+  quantity      Int       @default(1)
+  satuanUnit    String    @default("Unit")
+  gambar        String?
+  fotoTimestamp DateTime?
+  latitude      Float?
+  longitude     Float?
+  kondisi       Kondisi   @default(BAIK)
+  report        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([nomorAset])
+  @@index([kategori])
+  @@index([kondisi])
+}
