@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -7,49 +7,57 @@ import {
   Platform,
   ImageBackground,
   ActivityIndicator,
+  FlatList,
+  Dimensions,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Feather } from "@expo/vector-icons";
+import { API_BASE_URL } from "../config/apiConfig";
 
-type FeatherIcon = React.ComponentProps<typeof Feather>["name"];
+const { width: SCREEN_W } = Dimensions.get("window");
+const CARD_W = SCREEN_W - 48;
 
-const features: {
-  icon: FeatherIcon;
-  bgColor: string;
-  textColor: string;
-  title: string;
-  desc: string;
-}[] = [
-  {
-    icon: "camera",
-    bgColor: "#e8f5ee",
-    textColor: "#135d3a",
-    title: "Scan QR Code",
-    desc: "Identifikasi aset fisik langsung via kamera HP",
-  },
-  {
-    icon: "map-pin",
-    bgColor: "#e8f5ee",
-    textColor: "#135d3a",
-    title: "Tracking Lokasi",
-    desc: "Lihat posisi aset di peta secara visual",
-  },
-  {
-    icon: "clipboard",
-    bgColor: "#e8f5ee",
-    textColor: "#135d3a",
-    title: "Katalog Digital",
-    desc: "Kelola data aset lengkap dalam satu platform",
-  },
-  {
-    icon: "filter",
-    bgColor: "#e8f5ee",
-    textColor: "#135d3a",
-    title: "Filter & Cari",
-    desc: "Temukan aset berdasarkan nama, kategori, dll",
-  },
-];
+type AssetUpdate = {
+  id: string;
+  namaAset: string;
+  nomorAset: string;
+  kategori: string;
+  kondisi: string;
+  gambar: string | null;
+  updatedAt: string;
+};
+
+const KATEGORI_COLOR: Record<string, string> = {
+  BANGUNAN: "#0ea5e9",
+  KENDARAAN_DINAS: "#f59e0b",
+  PERLENGKAPAN: "#8b5cf6",
+  TANAH: "#10b981",
+};
+
+const KONDISI_COLOR: Record<string, string> = {
+  BAIK: "#135d3a",
+  RUSAK: "#f59e0b",
+  RUSAK_BERAT: "#ef4444",
+};
+
+const KONDISI_LABEL: Record<string, string> = {
+  BAIK: "Baik",
+  RUSAK: "Rusak",
+  RUSAK_BERAT: "Rusak Berat",
+};
+
+function timeAgo(dateString: string): string {
+  const diff = Date.now() - new Date(dateString).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "baru saja";
+  if (mins < 60) return `${mins} menit lalu`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} jam lalu`;
+  const days = Math.floor(hrs / 24);
+  return `${days} hari lalu`;
+}
 
 type StockData = {
   price: number;
@@ -64,6 +72,22 @@ export default function HomePage() {
   const router = useRouter();
   const [stock, setStock] = useState<StockData>(null);
   const [stockLoading, setStockLoading] = useState(true);
+  const [recentAssets, setRecentAssets] = useState<AssetUpdate[]>([]);
+  const [assetsLoading, setAssetsLoading] = useState(true);
+  const [sliderIndex, setSliderIndex] = useState(0);
+  const sliderRef = useRef<FlatList<AssetUpdate>>(null);
+
+  const fetchRecentAssets = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/assets?limit=8&page=1`);
+      const json = await res.json();
+      if (json?.data) setRecentAssets(json.data);
+    } catch (_) {
+      // silent fail
+    } finally {
+      setAssetsLoading(false);
+    }
+  }, []);
 
   const fetchStock = useCallback(async () => {
     try {
@@ -99,6 +123,24 @@ export default function HomePage() {
     const interval = setInterval(fetchStock, 30000);
     return () => clearInterval(interval);
   }, [fetchStock]);
+
+  useEffect(() => {
+    fetchRecentAssets();
+    const interval = setInterval(fetchRecentAssets, 60000);
+    return () => clearInterval(interval);
+  }, [fetchRecentAssets]);
+
+  useEffect(() => {
+    if (recentAssets.length < 2) return;
+    const timer = setInterval(() => {
+      setSliderIndex((prev) => {
+        const next = (prev + 1) % recentAssets.length;
+        sliderRef.current?.scrollToIndex({ index: next, animated: true });
+        return next;
+      });
+    }, 3500);
+    return () => clearInterval(timer);
+  }, [recentAssets.length]);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f8fafc" }}>
@@ -335,72 +377,172 @@ export default function HomePage() {
           </View>
         </View>
 
-        {/* Features */}
-        <View className="px-4 mt-5">
+        {/* Update Terbaru Slider */}
+        <View style={{ marginTop: 20, marginBottom: 8 }}>
           <Text
-            className="text-[11px] font-semibold text-slate-400 uppercase mb-3 px-1"
-            style={{ letterSpacing: 2 }}
+            style={{
+              fontSize: 11,
+              fontWeight: "600",
+              color: "#94a3b8",
+              textTransform: "uppercase",
+              letterSpacing: 2,
+              paddingHorizontal: 20,
+              marginBottom: 12,
+            }}
           >
-            Fitur Utama
+            Update Terbaru
           </Text>
 
-          {/* Row 1 */}
-          <View style={{ flexDirection: "row" }}>
-            {features.slice(0, 2).map((f, i) => (
-              <View
-                key={f.title}
-                className="flex-1 bg-white rounded-2xl p-4"
-                style={{
-                  borderWidth: 1,
-                  borderColor: "#f1f5f9",
-                  marginRight: i === 0 ? 6 : 0,
-                  marginLeft: i === 1 ? 6 : 0,
+          {assetsLoading ? (
+            <View style={{ height: 200, alignItems: "center", justifyContent: "center" }}>
+              <ActivityIndicator color="#135d3a" />
+            </View>
+          ) : recentAssets.length === 0 ? (
+            <View style={{ height: 200, alignItems: "center", justifyContent: "center" }}>
+              <Feather name="inbox" size={32} color="#cbd5e1" />
+              <Text style={{ color: "#94a3b8", fontSize: 13, marginTop: 10 }}>
+                Belum ada data aset
+              </Text>
+            </View>
+          ) : (
+            <>
+              <FlatList
+                ref={sliderRef}
+                data={recentAssets}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item) => item.id}
+                snapToInterval={CARD_W + 12}
+                decelerationRate="fast"
+                contentContainerStyle={{ paddingHorizontal: 20 }}
+                ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
+                onMomentumScrollEnd={(e) => {
+                  const idx = Math.round(
+                    e.nativeEvent.contentOffset.x / (CARD_W + 12)
+                  );
+                  setSliderIndex(Math.max(0, Math.min(idx, recentAssets.length - 1)));
                 }}
-              >
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    activeOpacity={0.88}
+                    onPress={() => router.push("/(admin)/dashboard")}
+                    style={{
+                      width: CARD_W,
+                      backgroundColor: "white",
+                      borderRadius: 20,
+                      overflow: "hidden",
+                      borderWidth: 1,
+                      borderColor: "#f1f5f9",
+                      shadowColor: "#94a3b8",
+                      shadowOffset: { width: 0, height: 3 },
+                      shadowOpacity: 0.15,
+                      shadowRadius: 8,
+                      elevation: 4,
+                    }}
+                  >
+                    {item.gambar ? (
+                      <Image
+                        source={{ uri: `${API_BASE_URL}${item.gambar}` }}
+                        style={{ width: "100%", height: 140 }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View
+                        style={{
+                          width: "100%",
+                          height: 140,
+                          backgroundColor: "#e8f5ee",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Feather name="image" size={36} color="#135d3a" />
+                      </View>
+                    )}
+                    <View style={{ padding: 14 }}>
+                      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+                        <View
+                          style={{
+                            backgroundColor: (KATEGORI_COLOR[item.kategori] ?? "#135d3a") + "22",
+                            borderRadius: 6,
+                            paddingHorizontal: 8,
+                            paddingVertical: 2,
+                            marginRight: 6,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: KATEGORI_COLOR[item.kategori] ?? "#135d3a",
+                              fontSize: 10,
+                              fontWeight: "700",
+                            }}
+                          >
+                            {item.kategori.replace("_", " ")}
+                          </Text>
+                        </View>
+                        <View
+                          style={{
+                            backgroundColor: (KONDISI_COLOR[item.kondisi] ?? "#135d3a") + "22",
+                            borderRadius: 6,
+                            paddingHorizontal: 8,
+                            paddingVertical: 2,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: KONDISI_COLOR[item.kondisi] ?? "#135d3a",
+                              fontSize: 10,
+                              fontWeight: "700",
+                            }}
+                          >
+                            {KONDISI_LABEL[item.kondisi] ?? item.kondisi}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text
+                        style={{ color: "#1e293b", fontWeight: "700", fontSize: 14, marginBottom: 6 }}
+                        numberOfLines={1}
+                      >
+                        {item.namaAset}
+                      </Text>
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <Feather name="clock" size={11} color="#94a3b8" />
+                        <Text style={{ color: "#94a3b8", fontSize: 11, marginLeft: 4 }}>
+                          {timeAgo(item.updatedAt)}
+                        </Text>
+                        <View style={{ flex: 1 }} />
+                        <Text style={{ color: "#cbd5e1", fontSize: 10 }}>
+                          #{item.nomorAset}
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              />
+              {recentAssets.length > 1 && (
                 <View
-                  className="w-9 h-9 rounded-xl items-center justify-center mb-3"
-                  style={{ backgroundColor: f.bgColor }}
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    marginTop: 14,
+                    gap: 6,
+                  }}
                 >
-                  <Feather name={f.icon} size={18} color={f.textColor} />
+                  {recentAssets.map((_, i) => (
+                    <View
+                      key={i}
+                      style={{
+                        width: i === sliderIndex ? 18 : 6,
+                        height: 6,
+                        borderRadius: 3,
+                        backgroundColor: i === sliderIndex ? "#135d3a" : "#d1fae5",
+                      }}
+                    />
+                  ))}
                 </View>
-                <Text className="font-semibold text-slate-700 text-[13px]">
-                  {f.title}
-                </Text>
-                <Text className="text-[11px] text-slate-400 mt-1">
-                  {f.desc}
-                </Text>
-              </View>
-            ))}
-          </View>
-
-          {/* Row 2 */}
-          <View style={{ flexDirection: "row", marginTop: 12 }}>
-            {features.slice(2, 4).map((f, i) => (
-              <View
-                key={f.title}
-                className="flex-1 bg-white rounded-2xl p-4"
-                style={{
-                  borderWidth: 1,
-                  borderColor: "#f1f5f9",
-                  marginRight: i === 0 ? 6 : 0,
-                  marginLeft: i === 1 ? 6 : 0,
-                }}
-              >
-                <View
-                  className="w-9 h-9 rounded-xl items-center justify-center mb-3"
-                  style={{ backgroundColor: f.bgColor }}
-                >
-                  <Feather name={f.icon} size={18} color={f.textColor} />
-                </View>
-                <Text className="font-semibold text-slate-700 text-[13px]">
-                  {f.title}
-                </Text>
-                <Text className="text-[11px] text-slate-400 mt-1">
-                  {f.desc}
-                </Text>
-              </View>
-            ))}
-          </View>
+              )}
+            </>
+          )}
         </View>
 
         <Text className="text-center text-[10px] text-slate-300 mt-8 mb-2">
