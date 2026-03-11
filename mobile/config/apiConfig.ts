@@ -6,7 +6,7 @@
 //   Production  : https://your-server.com
 // =============================================
 
-export const API_BASE_URL = "http://192.168.1.28:3000"; // Device fisik — IP LAN
+export const API_BASE_URL = "http://10.10.126.154:3000"; // Device fisik — IP LAN
 // export const API_BASE_URL = "http://localhost:3000"; // iOS simulator / web
 // export const API_BASE_URL = "http://192.168.x.x:3000"; // Device fisik — ganti IP LAN
 

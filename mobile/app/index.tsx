@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   Platform,
+  ImageBackground,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -29,8 +30,8 @@ const features: {
   },
   {
     icon: "map-pin",
-    bgColor: "#fce8e7",
-    textColor: "#d7362d",
+    bgColor: "#e8f5ee",
+    textColor: "#135d3a",
     title: "Tracking Lokasi",
     desc: "Lihat posisi aset di peta secara visual",
   },
@@ -43,71 +44,194 @@ const features: {
   },
   {
     icon: "filter",
-    bgColor: "#fce8e7",
-    textColor: "#d7362d",
+    bgColor: "#e8f5ee",
+    textColor: "#135d3a",
     title: "Filter & Cari",
     desc: "Temukan aset berdasarkan nama, kategori, dll",
   },
 ];
 
+type StockData = {
+  price: number;
+  change: number;
+  changePct: number;
+  high: number;
+  low: number;
+  volume: number;
+} | null;
+
 export default function HomePage() {
   const router = useRouter();
-  const [search, setSearch] = useState("");
+  const [stock, setStock] = useState<StockData>(null);
+  const [stockLoading, setStockLoading] = useState(true);
+
+  const fetchStock = useCallback(async () => {
+    try {
+      const res = await fetch(
+        "https://query1.finance.yahoo.com/v8/finance/chart/SMBR.JK?interval=1d&range=1d",
+        { headers: { "User-Agent": "Mozilla/5.0" } }
+      );
+      const json = await res.json();
+      const meta = json?.chart?.result?.[0]?.meta;
+      if (meta) {
+        const price = meta.regularMarketPrice ?? 0;
+        const prev = meta.previousClose ?? price;
+        const change = price - prev;
+        const changePct = prev !== 0 ? (change / prev) * 100 : 0;
+        setStock({
+          price,
+          change,
+          changePct,
+          high: meta.regularMarketDayHigh ?? 0,
+          low: meta.regularMarketDayLow ?? 0,
+          volume: meta.regularMarketVolume ?? 0,
+        });
+      }
+    } catch (_) {
+      // silent fail — keep showing last data
+    } finally {
+      setStockLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStock();
+    const interval = setInterval(fetchStock, 30000);
+    return () => clearInterval(interval);
+  }, [fetchStock]);
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View style={{ flex: 1, backgroundColor: "#f8fafc" }}>
       <StatusBar style="light" />
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 100, backgroundColor: "transparent" }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero Header */}
-        <View
-          className="pt-14 pb-8 px-5"
-          style={{ backgroundColor: "#135d3a" }}
+        {/* Hero Header with Background Image */}
+        <ImageBackground
+          source={require("../assets/background.png")}
+          className="w-full"
+          style={{ height: 220 }}
+          resizeMode="stretch"
         >
-          <Text className="text-white text-2xl font-bold">I-Asset SMBR</Text>
-          <Text
-            className="text-xs mt-1"
-            style={{ color: "rgba(255,255,255,0.6)" }}
-          >
-            PT Semen Baturaja (Persero) Tbk
-          </Text>
-
-          {/* Search Bar */}
+          {/* Dark overlay */}
           <View
-            className="bg-white rounded-2xl mt-5 px-4"
+            className="pt-14 px-5"
+            style={{ paddingBottom: 20 }}
+          >
+            <View style={{ height: 10 }} />
+          </View>
+        </ImageBackground>
+
+        {/* White rounded content area — GoPay style */}
+        <View
+          style={{
+            backgroundColor: "#f8fafc",
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            marginTop: -30,
+            paddingTop: 20,
+          }}
+        >
+
+        {/* SMBR Stock Ticker */}
+        <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
+          <TouchableOpacity
+            activeOpacity={0.85}
             style={{
-              flexDirection: "row",
-              alignItems: "center",
-              shadowColor: "#000",
+              borderRadius: 20,
+              backgroundColor: "rgba(19, 93, 58, 0.75)",
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.25)",
+              padding: 14,
+              shadowColor: "#135d3a",
               shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.15,
+              shadowOpacity: 0.35,
               shadowRadius: 12,
-              elevation: 8,
+              elevation: 6,
             }}
           >
-            <Feather name="search" size={20} color="#94a3b8" />
-            <TextInput
-              value={search}
-              onChangeText={setSearch}
-              placeholder="Cari nama atau ID aset..."
-              placeholderTextColor="#94a3b8"
-              className="flex-1 text-sm text-slate-700 py-3 ml-3"
-              returnKeyType="search"
-              onSubmitEditing={() => router.push("/(admin)/dashboard")}
-            />
-            <TouchableOpacity
-              onPress={() => router.push("/(admin)/dashboard")}
-              className="rounded-xl px-4 py-2"
-              style={{ backgroundColor: "#135d3a" }}
-              activeOpacity={0.8}
-            >
-              <Text className="text-white text-xs font-semibold">Cari</Text>
-            </TouchableOpacity>
-          </View>
+              {/* Header row */}
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+                <View
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.25)",
+                    borderRadius: 8,
+                    paddingHorizontal: 8,
+                    paddingVertical: 3,
+                    marginRight: 8,
+                  }}
+                >
+                  <Text style={{ color: "white", fontWeight: "800", fontSize: 12 }}>SMBR</Text>
+                </View>
+                <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>
+                  PT Semen Baturaja · IDX
+                </Text>
+                <View style={{ flex: 1 }} />
+                {stockLoading ? (
+                  <ActivityIndicator size="small" color="rgba(255,255,255,0.7)" />
+                ) : (
+                  <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 10 }}>Live ●</Text>
+                )}
+              </View>
+
+              {/* Price row */}
+              {stock ? (
+                <>
+                  <View style={{ flexDirection: "row", alignItems: "flex-end", marginBottom: 10 }}>
+                    <Text style={{ color: "white", fontSize: 28, fontWeight: "900", letterSpacing: -0.5 }}>
+                      Rp{stock.price.toLocaleString("id-ID")}
+                    </Text>
+                    <View
+                      style={{
+                        marginLeft: 10,
+                        marginBottom: 4,
+                        backgroundColor: stock.change >= 0 ? "rgba(52,211,153,0.25)" : "rgba(248,113,113,0.25)",
+                        borderRadius: 8,
+                        paddingHorizontal: 8,
+                        paddingVertical: 3,
+                        flexDirection: "row",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text style={{
+                        color: stock.change >= 0 ? "#6ee7b7" : "#fca5a5",
+                        fontSize: 12,
+                        fontWeight: "700",
+                      }}>
+                        {stock.change >= 0 ? "▲" : "▼"} {Math.abs(stock.changePct).toFixed(2)}%
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* H/L/Vol row */}
+                  <View style={{ flexDirection: "row", gap: 16 }}>
+                    <View>
+                      <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 10 }}>High</Text>
+                      <Text style={{ color: "rgba(255,255,255,0.9)", fontSize: 12, fontWeight: "600" }}>
+                        {stock.high.toLocaleString("id-ID")}
+                      </Text>
+                    </View>
+                    <View>
+                      <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 10 }}>Low</Text>
+                      <Text style={{ color: "rgba(255,255,255,0.9)", fontSize: 12, fontWeight: "600" }}>
+                        {stock.low.toLocaleString("id-ID")}
+                      </Text>
+                    </View>
+                    <View>
+                      <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 10 }}>Volume</Text>
+                      <Text style={{ color: "rgba(255,255,255,0.9)", fontSize: 12, fontWeight: "600" }}>
+                        {(stock.volume / 1000).toFixed(0)}K
+                      </Text>
+                    </View>
+                  </View>
+                </>
+              ) : (
+                <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>Memuat data saham...</Text>
+              )}
+          </TouchableOpacity>
         </View>
 
         {/* Action Cards */}
@@ -137,7 +261,7 @@ export default function HomePage() {
             >
               <View
                 className="w-12 h-12 rounded-2xl items-center justify-center"
-                style={{ backgroundColor: "#d7362d" }}
+                style={{ backgroundColor: "#135d3a" }}
               >
                 <Feather name="maximize" size={22} color="white" />
               </View>
@@ -204,7 +328,7 @@ export default function HomePage() {
             className="flex-1 bg-white rounded-2xl p-4 items-center ml-1.5"
             style={{ borderWidth: 1, borderColor: "#f1f5f9" }}
           >
-            <Text className="text-xl font-black" style={{ color: "#d7362d" }}>
+            <Text className="text-xl font-black" style={{ color: "#135d3a" }}>
               —
             </Text>
             <Text className="text-[10px] text-slate-400 mt-1">Lokasi</Text>
@@ -279,9 +403,11 @@ export default function HomePage() {
           </View>
         </View>
 
-        <Text className="text-center text-[10px] text-slate-300 mt-8">
+        <Text className="text-center text-[10px] text-slate-300 mt-8 mb-2">
           © 2026 PT Semen Baturaja (Persero) Tbk
         </Text>
+
+        </View>{/* end white rounded wrapper */}
       </ScrollView>
 
       {/* Bottom Navigation */}
@@ -330,8 +456,8 @@ export default function HomePage() {
               onPress={() => router.push("/(guest)/scan")}
               className="w-14 h-14 rounded-2xl items-center justify-center"
               style={{
-                backgroundColor: "#d7362d",
-                shadowColor: "#d7362d",
+                backgroundColor: "#135d3a",
+                shadowColor: "#135d3a",
                 shadowOffset: { width: 0, height: 8 },
                 shadowOpacity: 0.35,
                 shadowRadius: 10,
@@ -343,7 +469,7 @@ export default function HomePage() {
             </TouchableOpacity>
             <Text
               className="text-[10px] font-semibold mt-1"
-              style={{ color: "#d7362d" }}
+              style={{ color: "#135d3a" }}
             >
               Scan
             </Text>
