@@ -8,9 +8,9 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
-  Platform,
   Image,
   Dimensions,
+  Platform,
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -38,13 +38,6 @@ const KATEGORI_ICON: Record<string, FeatherIconName> = {
   KENDARAAN_DINAS: "truck",
   PERLENGKAPAN: "tool",
   TANAH: "map",
-};
-
-const KATEGORI_COLOR_MAP: Record<string, string> = {
-  BANGUNAN: "#0ea5e9",
-  KENDARAAN_DINAS: "#f59e0b",
-  PERLENGKAPAN: "#8b5cf6",
-  TANAH: "#10b981",
 };
 
 export default function DashboardScreen() {
@@ -96,7 +89,7 @@ export default function DashboardScreen() {
   }
 
   function renderAssetCard({ item, index }: { item: Asset; index: number }) {
-    const catColor = KATEGORI_COLOR_MAP[item.kategori] ?? "#135d3a";
+    const catColor = "#135d3a";
     const catIcon = KATEGORI_ICON[item.kategori] ?? "box";
     const photoUrl = assetService.getPhotoUrl(item.gambar);
     const isLeft = index % 2 === 0;
@@ -173,60 +166,30 @@ export default function DashboardScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f8fafc" }}>
-      {/* Header */}
-      <View style={{
-        backgroundColor: "#135d3a",
-        paddingTop: Platform.OS === "android" ? 16 : 12,
-        paddingBottom: 20,
-        paddingHorizontal: 20,
-      }}>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <View>
-            <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 11, fontWeight: "600", letterSpacing: 1.5, textTransform: "uppercase" }}>
-              I-Asset SMBR
-            </Text>
-            <Text style={{ color: "white", fontSize: 22, fontWeight: "900", marginTop: 2 }}>
-              Manajemen Aset
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={handleLogout}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              backgroundColor: "rgba(255,255,255,0.18)",
-              borderRadius: 12,
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-            }}
-          >
-            <Feather name="log-out" size={14} color="rgba(255,255,255,0.9)" />
-            <Text style={{ color: "rgba(255,255,255,0.9)", fontSize: 12, fontWeight: "600", marginLeft: 6 }}>Logout</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={{ flexDirection: "row", gap: 10 }}>
-          <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.18)", borderRadius: 14, padding: 12, alignItems: "center" }}>
-            <Text style={{ color: "white", fontSize: 22, fontWeight: "900" }}>{total}</Text>
-            <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 10, marginTop: 2 }}>Total Aset</Text>
-          </View>
-          <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.18)", borderRadius: 14, padding: 12, alignItems: "center" }}>
-            <Text style={{ color: "white", fontSize: 22, fontWeight: "900" }}>
-              {assets.filter(a => a.kondisi === "BAIK").length}
-            </Text>
-            <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 10, marginTop: 2 }}>Kondisi Baik</Text>
-          </View>
-          <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.18)", borderRadius: 14, padding: 12, alignItems: "center" }}>
-            <Text style={{ color: "white", fontSize: 22, fontWeight: "900" }}>
-              {assets.filter(a => a.kondisi !== "BAIK").length}
-            </Text>
-            <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 10, marginTop: 2 }}>Perlu Perhatian</Text>
-          </View>
-        </View>
-      </View>
-
       {/* Search */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 10 }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 10, flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 14,
+            backgroundColor: "white",
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1,
+            borderColor: "#f1f5f9",
+            shadowColor: "#94a3b8",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.08,
+            shadowRadius: 6,
+            elevation: 2,
+          }}
+        >
+          <Feather name="arrow-left" size={20} color="#135d3a" />
+        </TouchableOpacity>
         <View style={{
+          flex: 1,
           backgroundColor: "white",
           borderRadius: 16,
           flexDirection: "row",
