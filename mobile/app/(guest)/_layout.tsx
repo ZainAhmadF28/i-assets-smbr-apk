@@ -5,7 +5,7 @@ export default function GuestLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: "#1a7fd4" },
+        headerStyle: { backgroundColor: "#135d3a" },
         headerTintColor: "#ffffff",
         headerTitleStyle: { fontWeight: "bold" },
         contentStyle: { backgroundColor: "#f3f4f6" },

@@ -9,6 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { Feather } from "@expo/vector-icons";
 import { assetService } from "@services/assetService";
 import type { Asset } from "@shared-types/index";
 import { KATEGORI_LABEL } from "@shared-types/index";
@@ -42,25 +43,27 @@ export default function GuestAssetDetailScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
-        <ActivityIndicator size="large" color="#1a7fd4" />
-        <Text className="text-gray-500 mt-3 text-sm">Memuat data aset...</Text>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#f8fafc" }}>
+        <ActivityIndicator size="large" color="#135d3a" />
+        <Text style={{ color: "#94a3b8", marginTop: 12, fontSize: 13 }}>Memuat data aset...</Text>
       </View>
     );
   }
 
   if (error || !asset) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50 px-8">
-        <Text className="text-5xl mb-4">⚠️</Text>
-        <Text className="text-gray-800 font-bold text-lg text-center mb-2">
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#f8fafc", paddingHorizontal: 32 }}>
+        <View style={{ width: 72, height: 72, borderRadius: 24, backgroundColor: "#fee2e2", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+          <Feather name="alert-circle" size={32} color="#ef4444" />
+        </View>
+        <Text style={{ color: "#1e293b", fontWeight: "700", fontSize: 17, textAlign: "center", marginBottom: 8 }}>
           {error ?? "Aset tidak ditemukan"}
         </Text>
         <TouchableOpacity
-          className="mt-4 bg-blue-600 px-6 py-3 rounded-xl"
+          style={{ marginTop: 12, backgroundColor: "#135d3a", paddingHorizontal: 24, paddingVertical: 12, borderRadius: 14 }}
           onPress={() => router.back()}
         >
-          <Text className="text-white font-semibold">Kembali</Text>
+          <Text style={{ color: "white", fontWeight: "600", fontSize: 14 }}>Kembali</Text>
         </TouchableOpacity>
       </View>
     );
@@ -71,27 +74,21 @@ export default function GuestAssetDetailScreen() {
   return (
     <ScrollView className="flex-1 bg-gray-50">
       {/* Foto Aset */}
-      <View className="bg-white">
+      <View style={{ backgroundColor: "white" }}>
         {photoUrl ? (
-          <Image
-            source={{ uri: photoUrl }}
-            className="w-full h-52"
-            resizeMode="cover"
-          />
+          <Image source={{ uri: photoUrl }} style={{ width: "100%", height: 216 }} resizeMode="cover" />
         ) : (
-          <View className="w-full h-52 bg-gray-100 items-center justify-center">
-            <Text className="text-5xl">🏢</Text>
-            <Text className="text-gray-400 text-xs mt-2">Foto belum tersedia</Text>
+          <View style={{ width: "100%", height: 216, backgroundColor: "#e8f5ee", alignItems: "center", justifyContent: "center" }}>
+            <Feather name="image" size={48} color="#135d3a" />
+            <Text style={{ color: "#94a3b8", fontSize: 13, marginTop: 10 }}>Foto belum tersedia</Text>
           </View>
         )}
         {asset.fotoTimestamp && (
-          <View className="px-4 py-2 bg-gray-50 border-t border-gray-100">
-            <Text className="text-xs text-gray-400">
-              📸 Foto diambil:{" "}
-              {new Date(asset.fotoTimestamp).toLocaleString("id-ID", {
-                dateStyle: "long",
-                timeStyle: "short",
-              })}
+          <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: "#f8fafc", borderTopWidth: 1, borderTopColor: "#f1f5f9", flexDirection: "row", alignItems: "center" }}>
+            <Feather name="camera" size={11} color="#94a3b8" />
+            <Text style={{ color: "#94a3b8", fontSize: 11, marginLeft: 6 }}>
+              Foto diambil:{" "}
+              {new Date(asset.fotoTimestamp).toLocaleString("id-ID", { dateStyle: "long", timeStyle: "short" })}
             </Text>
           </View>
         )}
@@ -122,12 +119,15 @@ export default function GuestAssetDetailScreen() {
         )}
 
         {/* Lokasi */}
-        <View className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
-          <Text className="text-sm font-semibold text-gray-700 mb-3">Lokasi Aset</Text>
+        <View style={{ backgroundColor: "white", borderRadius: 20, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#f1f5f9" }}>
+          <Text style={{ fontSize: 13, fontWeight: "700", color: "#1e293b", marginBottom: 12 }}>Lokasi Aset</Text>
           {asset.latitude && asset.longitude && (
-            <Text className="text-xs text-gray-400 mb-2">
-              📍 {asset.latitude.toFixed(6)}, {asset.longitude.toFixed(6)}
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+              <Feather name="map-pin" size={12} color="#135d3a" />
+              <Text style={{ color: "#64748b", fontSize: 11, marginLeft: 6 }}>
+                {asset.latitude.toFixed(6)}, {asset.longitude.toFixed(6)}
+              </Text>
+            </View>
           )}
           <MapViewer
             latitude={asset.latitude}

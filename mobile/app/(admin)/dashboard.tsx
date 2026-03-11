@@ -8,13 +8,22 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  Platform,
+  Image,
+  Dimensions,
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
+import { Feather } from "@expo/vector-icons";
 import { assetService } from "@services/assetService";
 import { authService } from "@services/authService";
-import type { Asset, Kategori, Kondisi } from "@shared-types/index";
-import { KATEGORI_LABEL, KONDISI_LABEL } from "@shared-types/index";
+import type { Asset, Kategori } from "@shared-types/index";
+import { KATEGORI_LABEL } from "@shared-types/index";
 import KondisiBadge from "@components/ui/KondisiBadge";
+
+type FeatherIconName = React.ComponentProps<typeof Feather>["name"];
+
+const { width: SCREEN_W } = Dimensions.get("window");
+const CARD_W = (SCREEN_W - 48) / 2;
 
 const KATEGORI_OPTIONS: Array<{ label: string; value: Kategori | "" }> = [
   { label: "Semua", value: "" },
@@ -24,12 +33,19 @@ const KATEGORI_OPTIONS: Array<{ label: string; value: Kategori | "" }> = [
   { label: "Tanah", value: "TANAH" },
 ];
 
-const KONDISI_OPTIONS: Array<{ label: string; value: Kondisi | "" }> = [
-  { label: "Semua", value: "" },
-  { label: "Baik", value: "BAIK" },
-  { label: "Rusak", value: "RUSAK" },
-  { label: "Rusak Berat", value: "RUSAK_BERAT" },
-];
+const KATEGORI_ICON: Record<string, FeatherIconName> = {
+  BANGUNAN: "home",
+  KENDARAAN_DINAS: "truck",
+  PERLENGKAPAN: "tool",
+  TANAH: "map",
+};
+
+const KATEGORI_COLOR_MAP: Record<string, string> = {
+  BANGUNAN: "#0ea5e9",
+  KENDARAAN_DINAS: "#f59e0b",
+  PERLENGKAPAN: "#8b5cf6",
+  TANAH: "#10b981",
+};
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -39,12 +55,11 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [filterKategori, setFilterKategori] = useState<Kategori | "">("");
-  const [filterKondisi, setFilterKondisi] = useState<Kondisi | "">("");
 
   useFocusEffect(
     useCallback(() => {
       loadAssets();
-    }, [search, filterKategori, filterKondisi])
+    }, [search, filterKategori])
   );
 
   async function loadAssets(isRefresh = false) {
@@ -54,7 +69,6 @@ export default function DashboardScreen() {
       const result = await assetService.getAll({
         search: search || undefined,
         kategori: filterKategori || undefined,
-        kondisi: filterKondisi || undefined,
         limit: 50,
       });
       setAssets(result.data);
@@ -81,54 +95,156 @@ export default function DashboardScreen() {
     ]);
   }
 
-  function renderAssetCard({ item }: { item: Asset }) {
+  function renderAssetCard({ item, index }: { item: Asset; index: number }) {
+    const catColor = KATEGORI_COLOR_MAP[item.kategori] ?? "#135d3a";
+    const catIcon = KATEGORI_ICON[item.kategori] ?? "box";
+    const photoUrl = assetService.getPhotoUrl(item.gambar);
+    const isLeft = index % 2 === 0;
     return (
       <TouchableOpacity
-        className="bg-white rounded-2xl p-4 mb-3 mx-4 shadow-sm active:opacity-80"
         onPress={() => router.push(`/(admin)/asset/${item.id}`)}
+        activeOpacity={0.82}
+        style={{
+          width: CARD_W,
+          backgroundColor: "white",
+          borderRadius: 20,
+          marginLeft: isLeft ? 16 : 8,
+          marginRight: isLeft ? 8 : 16,
+          marginBottom: 16,
+          borderWidth: 1,
+          borderColor: "#f1f5f9",
+          shadowColor: "#94a3b8",
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.12,
+          shadowRadius: 8,
+          elevation: 3,
+          overflow: "hidden",
+        }}
       >
-        <View className="flex-row justify-between items-start mb-2">
-          <View className="flex-1 mr-3">
-            <Text className="text-xs text-gray-400 font-mono">{item.nomorAset}</Text>
-            <Text className="text-gray-900 font-semibold text-base mt-0.5 leading-tight">
-              {item.namaAset}
-            </Text>
+        {/* Thumbnail */}
+        {photoUrl ? (
+          <Image
+            source={{ uri: photoUrl }}
+            style={{ width: "100%", height: CARD_W * 0.72 }}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={{
+            width: "100%",
+            height: CARD_W * 0.72,
+            backgroundColor: catColor + "18",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            <Feather name={catIcon} size={32} color={catColor} />
           </View>
-          <KondisiBadge kondisi={item.kondisi} />
-        </View>
-        <View className="flex-row items-center justify-between mt-1">
-          <Text className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
-            {KATEGORI_LABEL[item.kategori]}
+        )}
+
+        {/* Info */}
+        <View style={{ padding: 12 }}>
+          <Text
+            style={{ color: "#1e293b", fontWeight: "700", fontSize: 13, lineHeight: 18, marginBottom: 6 }}
+            numberOfLines={2}
+          >
+            {item.namaAset}
           </Text>
-          <Text className="text-xs text-gray-400">
-            {item.quantity} {item.satuanUnit}
+          <Text style={{ color: "#94a3b8", fontSize: 10, marginBottom: 8 }} numberOfLines={1}>
+            #{item.nomorAset}
           </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <Text style={{
+              color: catColor,
+              fontSize: 9,
+              fontWeight: "700",
+              backgroundColor: catColor + "18",
+              paddingHorizontal: 7,
+              paddingVertical: 2,
+              borderRadius: 6,
+              overflow: "hidden",
+            }}>
+              {KATEGORI_LABEL[item.kategori]}
+            </Text>
+            <KondisiBadge kondisi={item.kondisi} />
+          </View>
         </View>
       </TouchableOpacity>
     );
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
-      {/* Stats Bar */}
-      <View className="bg-blue-600 px-4 pt-3 pb-4">
-        <View className="flex-row justify-between items-center mb-3">
-          <Text className="text-white text-sm opacity-80">Total Aset Terdaftar</Text>
-          <TouchableOpacity onPress={handleLogout}>
-            <Text className="text-blue-200 text-sm">Logout</Text>
+    <View style={{ flex: 1, backgroundColor: "#f8fafc" }}>
+      {/* Header */}
+      <View style={{
+        backgroundColor: "#135d3a",
+        paddingTop: Platform.OS === "android" ? 16 : 12,
+        paddingBottom: 20,
+        paddingHorizontal: 20,
+      }}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <View>
+            <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 11, fontWeight: "600", letterSpacing: 1.5, textTransform: "uppercase" }}>
+              I-Asset SMBR
+            </Text>
+            <Text style={{ color: "white", fontSize: 22, fontWeight: "900", marginTop: 2 }}>
+              Manajemen Aset
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={handleLogout}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "rgba(255,255,255,0.18)",
+              borderRadius: 12,
+              paddingHorizontal: 14,
+              paddingVertical: 8,
+            }}
+          >
+            <Feather name="log-out" size={14} color="rgba(255,255,255,0.9)" />
+            <Text style={{ color: "rgba(255,255,255,0.9)", fontSize: 12, fontWeight: "600", marginLeft: 6 }}>Logout</Text>
           </TouchableOpacity>
         </View>
-        <Text className="text-white text-3xl font-black">{total}</Text>
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.18)", borderRadius: 14, padding: 12, alignItems: "center" }}>
+            <Text style={{ color: "white", fontSize: 22, fontWeight: "900" }}>{total}</Text>
+            <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 10, marginTop: 2 }}>Total Aset</Text>
+          </View>
+          <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.18)", borderRadius: 14, padding: 12, alignItems: "center" }}>
+            <Text style={{ color: "white", fontSize: 22, fontWeight: "900" }}>
+              {assets.filter(a => a.kondisi === "BAIK").length}
+            </Text>
+            <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 10, marginTop: 2 }}>Kondisi Baik</Text>
+          </View>
+          <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.18)", borderRadius: 14, padding: 12, alignItems: "center" }}>
+            <Text style={{ color: "white", fontSize: 22, fontWeight: "900" }}>
+              {assets.filter(a => a.kondisi !== "BAIK").length}
+            </Text>
+            <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 10, marginTop: 2 }}>Perlu Perhatian</Text>
+          </View>
+        </View>
       </View>
 
       {/* Search */}
-      <View className="px-4 pt-4 pb-2">
-        <View className="bg-white rounded-xl flex-row items-center px-4 shadow-sm border border-gray-100">
-          <Text className="text-gray-400 mr-2">🔍</Text>
+      <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 10 }}>
+        <View style={{
+          backgroundColor: "white",
+          borderRadius: 16,
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 14,
+          borderWidth: 1,
+          borderColor: "#f1f5f9",
+          shadowColor: "#94a3b8",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 6,
+          elevation: 2,
+        }}>
+          <Feather name="search" size={16} color="#94a3b8" />
           <TextInput
-            className="flex-1 py-3 text-gray-900 text-sm"
+            style={{ flex: 1, paddingVertical: 13, paddingHorizontal: 10, color: "#1e293b", fontSize: 14 }}
             placeholder="Cari nama atau nomor aset..."
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor="#94a3b8"
             value={search}
             onChangeText={setSearch}
             returnKeyType="search"
@@ -136,33 +252,34 @@ export default function DashboardScreen() {
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch("")}>
-              <Text className="text-gray-400 text-lg">✕</Text>
+              <Feather name="x" size={16} color="#94a3b8" />
             </TouchableOpacity>
           )}
         </View>
       </View>
 
       {/* Filter Chips */}
-      <View className="px-4 pb-3">
+      <View style={{ paddingBottom: 12 }}>
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
           data={KATEGORI_OPTIONS}
           keyExtractor={(item) => `kat-${item.value}`}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+          ItemSeparatorComponent={() => <View style={{ width: 8 }} />}
           renderItem={({ item }) => (
             <TouchableOpacity
-              className={`px-3 py-1.5 rounded-full mr-2 border ${
-                filterKategori === item.value
-                  ? "bg-blue-600 border-blue-600"
-                  : "bg-white border-gray-200"
-              }`}
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                borderRadius: 20,
+                backgroundColor: filterKategori === item.value ? "#135d3a" : "white",
+                borderWidth: 1,
+                borderColor: filterKategori === item.value ? "#135d3a" : "#e2e8f0",
+              }}
               onPress={() => setFilterKategori(item.value)}
             >
-              <Text
-                className={`text-xs font-medium ${
-                  filterKategori === item.value ? "text-white" : "text-gray-600"
-                }`}
-              >
+              <Text style={{ fontSize: 12, fontWeight: "600", color: filterKategori === item.value ? "white" : "#64748b" }}>
                 {item.label}
               </Text>
             </TouchableOpacity>
@@ -172,45 +289,73 @@ export default function DashboardScreen() {
 
       {/* Asset List */}
       {loading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#1a7fd4" />
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <ActivityIndicator size="large" color="#135d3a" />
         </View>
       ) : (
         <FlatList
           data={assets}
           keyExtractor={(item) => item.id}
+          numColumns={2}
           renderItem={renderAssetCard}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => loadAssets(true)}
-              colors={["#1a7fd4"]}
+              colors={["#135d3a"]}
             />
           }
           ListEmptyComponent={
-            <View className="items-center justify-center py-16">
-              <Text className="text-5xl mb-3">📦</Text>
-              <Text className="text-gray-500 font-medium">Belum ada aset terdaftar</Text>
-              <Text className="text-gray-400 text-sm mt-1">Tap + untuk menambahkan aset baru</Text>
+            <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 64 }}>
+              <View style={{
+                width: 72, height: 72, borderRadius: 24,
+                backgroundColor: "#e8f5ee",
+                alignItems: "center", justifyContent: "center", marginBottom: 16,
+              }}>
+                <Feather name="inbox" size={32} color="#135d3a" />
+              </View>
+              <Text style={{ color: "#1e293b", fontWeight: "700", fontSize: 16 }}>Belum ada aset</Text>
+              <Text style={{ color: "#94a3b8", fontSize: 13, marginTop: 6 }}>Tap + untuk menambahkan aset baru</Text>
             </View>
           }
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={{ paddingBottom: 120, paddingTop: 4 }}
         />
       )}
 
-      {/* FAB — Tambah Aset */}
-      <View className="absolute bottom-6 right-6 flex-row gap-3">
+      {/* FAB */}
+      <View style={{
+        position: "absolute",
+        bottom: Platform.OS === "android" ? 20 : 36,
+        right: 20,
+        flexDirection: "row",
+        gap: 12,
+        alignItems: "flex-end",
+      }}>
         <TouchableOpacity
-          className="bg-gray-700 w-12 h-12 rounded-full items-center justify-center shadow-lg"
           onPress={() => router.push("/(admin)/scan")}
+          style={{
+            width: 48, height: 48, borderRadius: 16,
+            backgroundColor: "#1e293b",
+            alignItems: "center", justifyContent: "center",
+            shadowColor: "#1e293b",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3, shadowRadius: 8, elevation: 6,
+          }}
         >
-          <Text className="text-white text-xl">📷</Text>
+          <Feather name="camera" size={20} color="white" />
         </TouchableOpacity>
         <TouchableOpacity
-          className="bg-blue-600 w-14 h-14 rounded-full items-center justify-center shadow-lg"
           onPress={() => router.push("/(admin)/add")}
+          style={{
+            width: 56, height: 56, borderRadius: 20,
+            backgroundColor: "#135d3a",
+            alignItems: "center", justifyContent: "center",
+            shadowColor: "#135d3a",
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.4, shadowRadius: 10, elevation: 8,
+          }}
         >
-          <Text className="text-white text-2xl font-bold">+</Text>
+          <Feather name="plus" size={24} color="white" />
         </TouchableOpacity>
       </View>
     </View>

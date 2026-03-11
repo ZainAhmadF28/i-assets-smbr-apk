@@ -10,12 +10,12 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
+import { Feather } from "@expo/vector-icons";
 import { assetService } from "@services/assetService";
 import type { Asset } from "@shared-types/index";
 import { KATEGORI_LABEL } from "@shared-types/index";
 import KondisiBadge from "@components/ui/KondisiBadge";
 import MapViewer from "@components/maps/MapViewer";
-import Button from "@components/ui/Button";
 
 export default function AdminAssetDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -108,8 +108,8 @@ export default function AdminAssetDetailScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
-        <ActivityIndicator size="large" color="#1a7fd4" />
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#f8fafc" }}>
+        <ActivityIndicator size="large" color="#135d3a" />
       </View>
     );
   }
@@ -122,30 +122,42 @@ export default function AdminAssetDetailScreen() {
   return (
     <ScrollView className="flex-1 bg-gray-50">
       {/* Foto */}
-      <View className="bg-white">
+      <View style={{ backgroundColor: "white" }}>
         {photoUrl ? (
-          <Image source={{ uri: photoUrl }} className="w-full h-52" resizeMode="cover" />
+          <Image source={{ uri: photoUrl }} style={{ width: "100%", height: 220 }} resizeMode="cover" />
         ) : (
-          <View className="w-full h-52 bg-gray-100 items-center justify-center">
-            <Text className="text-5xl">🏢</Text>
-            <Text className="text-gray-400 text-xs mt-2">Foto belum tersedia</Text>
+          <View style={{ width: "100%", height: 220, backgroundColor: "#e8f5ee", alignItems: "center", justifyContent: "center" }}>
+            <Feather name="image" size={48} color="#135d3a" />
+            <Text style={{ color: "#94a3b8", fontSize: 13, marginTop: 10 }}>Foto belum tersedia</Text>
           </View>
         )}
         <TouchableOpacity
-          className="absolute bottom-3 right-3 bg-blue-600 px-4 py-2 rounded-full flex-row items-center"
+          style={{
+            position: "absolute", bottom: 12, right: 12,
+            backgroundColor: "#135d3a",
+            borderRadius: 20,
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+            flexDirection: "row",
+            alignItems: "center",
+          }}
           onPress={handleUpdatePhoto}
           disabled={uploadingPhoto}
         >
           {uploadingPhoto ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text className="text-white text-xs font-semibold">📷 Update Foto</Text>
+            <>
+              <Feather name="camera" size={13} color="white" />
+              <Text style={{ color: "white", fontSize: 12, fontWeight: "600", marginLeft: 6 }}>Update Foto</Text>
+            </>
           )}
         </TouchableOpacity>
         {asset.fotoTimestamp && (
-          <View className="px-4 py-2 bg-gray-50 border-t border-gray-100">
-            <Text className="text-xs text-gray-400">
-              📸 Foto diambil:{" "}
+          <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: "#f8fafc", borderTopWidth: 1, borderTopColor: "#f1f5f9", flexDirection: "row", alignItems: "center" }}>
+            <Feather name="camera" size={11} color="#94a3b8" />
+            <Text style={{ color: "#94a3b8", fontSize: 11, marginLeft: 6 }}>
+              Foto diambil:{" "}
               {new Date(asset.fotoTimestamp).toLocaleString("id-ID", { dateStyle: "long", timeStyle: "short" })}
             </Text>
           </View>
@@ -173,12 +185,15 @@ export default function AdminAssetDetailScreen() {
         )}
 
         {/* Lokasi */}
-        <View className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
-          <Text className="text-sm font-semibold text-gray-700 mb-2">Lokasi Aset</Text>
+        <View style={{ backgroundColor: "white", borderRadius: 20, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#f1f5f9" }}>
+          <Text style={{ fontSize: 13, fontWeight: "700", color: "#1e293b", marginBottom: 12 }}>Lokasi Aset</Text>
           {asset.latitude && asset.longitude && (
-            <Text className="text-xs text-gray-400 mb-2">
-              📍 {asset.latitude.toFixed(6)}, {asset.longitude.toFixed(6)}
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+              <Feather name="map-pin" size={12} color="#135d3a" />
+              <Text style={{ color: "#64748b", fontSize: 11, marginLeft: 6 }}>
+                {asset.latitude.toFixed(6)}, {asset.longitude.toFixed(6)}
+              </Text>
+            </View>
           )}
           <MapViewer latitude={asset.latitude} longitude={asset.longitude} namaAset={asset.namaAset} height={220} />
         </View>
@@ -195,20 +210,35 @@ export default function AdminAssetDetailScreen() {
         </View>
 
         {/* Admin Actions */}
-        <Button
-          title="✏️  Edit Data Aset"
-          variant="secondary"
-          fullWidth
+        <TouchableOpacity
+          style={{
+            flexDirection: "row", alignItems: "center", justifyContent: "center",
+            backgroundColor: "#f1f5f9",
+            borderRadius: 16, padding: 16, marginBottom: 12,
+          }}
           onPress={() => router.push(`/(admin)/asset/edit/${asset.id}`)}
-          className="mb-3"
-        />
-        <Button
-          title="🗑️  Hapus Aset"
-          variant="danger"
-          fullWidth
-          loading={deleting}
+        >
+          <Feather name="edit-2" size={16} color="#1e293b" />
+          <Text style={{ color: "#1e293b", fontWeight: "700", fontSize: 15, marginLeft: 8 }}>Edit Data Aset</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            flexDirection: "row", alignItems: "center", justifyContent: "center",
+            backgroundColor: deleting ? "#fca5a5" : "#ef4444",
+            borderRadius: 16, padding: 16,
+          }}
           onPress={handleDelete}
-        />
+          disabled={deleting}
+        >
+          {deleting ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <>
+              <Feather name="trash-2" size={16} color="white" />
+              <Text style={{ color: "white", fontWeight: "700", fontSize: 15, marginLeft: 8 }}>Hapus Aset</Text>
+            </>
+          )}
+        </TouchableOpacity>
 
         <Text className="text-xs text-gray-400 text-center mt-4">
           Terakhir diperbarui:{" "}

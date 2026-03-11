@@ -13,6 +13,7 @@ import {
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
+import { Feather } from "@expo/vector-icons";
 import { assetService } from "@services/assetService";
 import type { Kategori, Kondisi } from "@shared-types/index";
 import InputField from "@components/ui/InputField";
@@ -161,20 +162,30 @@ export default function AddAssetScreen() {
               </TouchableOpacity>
             </View>
           ) : (
-            <View className="flex-row gap-3">
+            <View style={{ flexDirection: "row", gap: 12 }}>
               <TouchableOpacity
-                className="flex-1 h-24 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl items-center justify-center"
+                style={{
+                  flex: 1, height: 96,
+                  backgroundColor: "#f8fafc",
+                  borderWidth: 2, borderStyle: "dashed", borderColor: "#e2e8f0",
+                  borderRadius: 16, alignItems: "center", justifyContent: "center", gap: 6,
+                }}
                 onPress={takePhoto}
               >
-                <Text className="text-2xl">📷</Text>
-                <Text className="text-xs text-gray-500 mt-1">Kamera</Text>
+                <Feather name="camera" size={22} color="#135d3a" />
+                <Text style={{ color: "#64748b", fontSize: 12 }}>Kamera</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className="flex-1 h-24 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl items-center justify-center"
+                style={{
+                  flex: 1, height: 96,
+                  backgroundColor: "#f8fafc",
+                  borderWidth: 2, borderStyle: "dashed", borderColor: "#e2e8f0",
+                  borderRadius: 16, alignItems: "center", justifyContent: "center", gap: 6,
+                }}
                 onPress={pickPhoto}
               >
-                <Text className="text-2xl">🖼️</Text>
-                <Text className="text-xs text-gray-500 mt-1">Galeri</Text>
+                <Feather name="image" size={22} color="#135d3a" />
+                <Text style={{ color: "#64748b", fontSize: 12 }}>Galeri</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -194,12 +205,17 @@ export default function AddAssetScreen() {
             {KATEGORI_OPTIONS.map((opt) => (
               <TouchableOpacity
                 key={opt.value}
-                className={`px-4 py-2 rounded-xl border ${
-                  form.kategori === opt.value ? "bg-blue-600 border-blue-600" : "bg-white border-gray-200"
-                }`}
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 12,
+                  backgroundColor: form.kategori === opt.value ? "#135d3a" : "white",
+                  borderWidth: 1,
+                  borderColor: form.kategori === opt.value ? "#135d3a" : "#e2e8f0",
+                }}
                 onPress={() => setField("kategori", opt.value)}
               >
-                <Text className={`text-sm ${form.kategori === opt.value ? "text-white font-semibold" : "text-gray-600"}`}>
+                <Text style={{ fontSize: 13, fontWeight: "600", color: form.kategori === opt.value ? "white" : "#64748b" }}>
                   {opt.label}
                 </Text>
               </TouchableOpacity>
@@ -221,14 +237,17 @@ export default function AddAssetScreen() {
           <View className="flex-row justify-between items-center mb-3">
             <Text className="text-sm font-semibold text-gray-700">Lokasi GPS</Text>
             <TouchableOpacity
-              className="flex-row items-center bg-blue-50 px-3 py-1.5 rounded-lg"
+              style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#e8f5ee", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 }}
               onPress={getGPS}
               disabled={gpsLoading}
             >
               {gpsLoading ? (
-                <ActivityIndicator size="small" color="#1a7fd4" />
+                <ActivityIndicator size="small" color="#135d3a" />
               ) : (
-                <Text className="text-blue-600 text-xs font-medium">📍 Ambil Otomatis</Text>
+                <>
+                  <Feather name="map-pin" size={12} color="#135d3a" />
+                  <Text style={{ color: "#135d3a", fontSize: 12, fontWeight: "600", marginLeft: 5 }}>Ambil Otomatis</Text>
+                </>
               )}
             </TouchableOpacity>
           </View>

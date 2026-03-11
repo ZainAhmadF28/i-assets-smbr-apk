@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Location from "expo-location";
+import { Feather } from "@expo/vector-icons";
 import { assetService } from "@services/assetService";
 import type { Asset, Kategori, Kondisi } from "@shared-types/index";
 import InputField from "@components/ui/InputField";
@@ -168,12 +169,17 @@ export default function EditAssetScreen() {
             {KATEGORI_OPTIONS.map((opt) => (
               <TouchableOpacity
                 key={opt.value}
-                className={`px-4 py-2 rounded-xl border ${
-                  form.kategori === opt.value ? "bg-blue-600 border-blue-600" : "bg-white border-gray-200"
-                }`}
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 12,
+                  backgroundColor: form.kategori === opt.value ? "#135d3a" : "white",
+                  borderWidth: 1,
+                  borderColor: form.kategori === opt.value ? "#135d3a" : "#e2e8f0",
+                }}
                 onPress={() => setField("kategori", opt.value)}
               >
-                <Text className={`text-sm ${form.kategori === opt.value ? "text-white font-semibold" : "text-gray-600"}`}>
+                <Text style={{ fontSize: 13, fontWeight: "600", color: form.kategori === opt.value ? "white" : "#64748b" }}>
                   {opt.label}
                 </Text>
               </TouchableOpacity>
@@ -194,8 +200,17 @@ export default function EditAssetScreen() {
         <View className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
           <View className="flex-row justify-between items-center mb-3">
             <Text className="text-sm font-semibold text-gray-700">Lokasi GPS</Text>
-            <TouchableOpacity className="flex-row items-center bg-blue-50 px-3 py-1.5 rounded-lg" onPress={getGPS} disabled={gpsLoading}>
-              {gpsLoading ? <ActivityIndicator size="small" color="#1a7fd4" /> : <Text className="text-blue-600 text-xs font-medium">📍 Ambil Otomatis</Text>}
+            <TouchableOpacity
+              style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#e8f5ee", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 }}
+              onPress={getGPS}
+              disabled={gpsLoading}
+            >
+              {gpsLoading ? <ActivityIndicator size="small" color="#135d3a" /> : (
+                <>
+                  <Feather name="map-pin" size={12} color="#135d3a" />
+                  <Text style={{ color: "#135d3a", fontSize: 12, fontWeight: "600", marginLeft: 5 }}>Ambil Otomatis</Text>
+                </>
+              )}
             </TouchableOpacity>
           </View>
           <View className="flex-row gap-3">
