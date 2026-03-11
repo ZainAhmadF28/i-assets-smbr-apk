@@ -166,48 +166,67 @@ export default function DashboardScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f8fafc" }}>
-      {/* Search */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 10, flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <TouchableOpacity
-          onPress={() => router.replace("/")}
+      {/* Header */}
+      <View
+        style={{
+          backgroundColor: "#135d3a",
+          paddingTop: Platform.OS === "ios" ? 50 : 32,
+          paddingBottom: 14,
+          paddingHorizontal: 16,
+          borderBottomLeftRadius: 24,
+          borderBottomRightRadius: 24,
+          shadowColor: "#135d3a",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.25,
+          shadowRadius: 12,
+          elevation: 8,
+        }}
+      >
+        {/* Top row: back button + title */}
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+          <TouchableOpacity
+            onPress={() => router.replace("/")}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 12,
+              backgroundColor: "rgba(255,255,255,0.15)",
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 12,
+            }}
+          >
+            <Feather name="arrow-left" size={18} color="white" />
+          </TouchableOpacity>
+          <Text style={{ color: "white", fontSize: 20, fontWeight: "800", flex: 1 }}>
+            Aset
+          </Text>
+          <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: "600" }}>
+            {total} item
+          </Text>
+        </View>
+
+        {/* Search bar */}
+        <View
           style={{
-            width: 44,
-            height: 44,
+            backgroundColor: "rgba(255,255,255,0.15)",
             borderRadius: 14,
-            backgroundColor: "white",
+            flexDirection: "row",
             alignItems: "center",
-            justifyContent: "center",
-            borderWidth: 1,
-            borderColor: "#f1f5f9",
-            shadowColor: "#94a3b8",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.08,
-            shadowRadius: 6,
-            elevation: 2,
+            paddingHorizontal: 14,
           }}
         >
-          <Feather name="arrow-left" size={20} color="#135d3a" />
-        </TouchableOpacity>
-        <View style={{
-          flex: 1,
-          backgroundColor: "white",
-          borderRadius: 16,
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: 14,
-          borderWidth: 1,
-          borderColor: "#f1f5f9",
-          shadowColor: "#94a3b8",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.08,
-          shadowRadius: 6,
-          elevation: 2,
-        }}>
-          <Feather name="search" size={16} color="#94a3b8" />
+          <Feather name="search" size={16} color="rgba(255,255,255,0.6)" />
           <TextInput
-            style={{ flex: 1, paddingVertical: 13, paddingHorizontal: 10, color: "#1e293b", fontSize: 14 }}
+            style={{
+              flex: 1,
+              paddingVertical: 12,
+              paddingHorizontal: 10,
+              color: "white",
+              fontSize: 14,
+            }}
             placeholder="Cari nama atau nomor aset..."
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor="rgba(255,255,255,0.45)"
             value={search}
             onChangeText={setSearch}
             returnKeyType="search"
@@ -215,14 +234,14 @@ export default function DashboardScreen() {
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch("")}>
-              <Feather name="x" size={16} color="#94a3b8" />
+              <Feather name="x" size={16} color="rgba(255,255,255,0.6)" />
             </TouchableOpacity>
           )}
         </View>
       </View>
 
       {/* Filter Chips */}
-      <View style={{ paddingBottom: 12 }}>
+      <View style={{ paddingTop: 14, paddingBottom: 12 }}>
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
