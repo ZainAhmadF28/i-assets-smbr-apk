@@ -169,7 +169,7 @@ export default function DashboardScreen() {
       {/* Search */}
       <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 10, flexDirection: "row", alignItems: "center", gap: 10 }}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => router.replace("/")}
           style={{
             width: 44,
             height: 44,
