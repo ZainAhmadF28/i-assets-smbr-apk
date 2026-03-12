@@ -11,12 +11,14 @@ import {
   Image,
   Dimensions,
   Platform,
+  Modal,
+  ScrollView,
 } from "react-native";
-import { useRouter, useFocusEffect } from "expo-router";
+import { useRouter, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { assetService } from "@services/assetService";
 import { authService } from "@services/authService";
-import type { Asset } from "@shared-types/index";
+import type { Asset, Kondisi } from "@shared-types/index";
 import KondisiBadge from "@components/ui/KondisiBadge";
 
 type FeatherIconName = React.ComponentProps<typeof Feather>["name"];
@@ -41,8 +43,18 @@ const KATEGORI_ICON: Record<string, FeatherIconName> = {
   "TANAH": "map",
 };
 
+const KONDISI_OPTIONS: Array<{ label: string; value: string }> = [
+  { label: "Semua Kondisi", value: "" },
+  { label: "Baik", value: "BAIK" },
+  { label: "Rusak", value: "RUSAK" },
+  { label: "Rusak Berat", value: "RUSAK_BERAT" },
+  { label: "Hilang", value: "HILANG" },
+  { label: "Belum Dicek", value: "BELUM_DICEK" },
+];
+
 export default function DashboardScreen() {
   const router = useRouter();
+  const { kondisi: kondisiParam } = useLocalSearchParams<{ kondisi?: string }>();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -50,10 +62,18 @@ export default function DashboardScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [search, setSearch] = useState("");
   const [filterKategori, setFilterKategori] = useState<string>("");
+  const [filterKondisi, setFilterKondisi] = useState<string>(kondisiParam || "");
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [showFilter, setShowFilter] = useState(false);
 
   const PAGE_SIZE = 50;
+  const activeFilterCount = (filterKategori ? 1 : 0) + (filterKondisi ? 1 : 0);
+
+  // Sync kondisi param from navigation
+  useEffect(() => {
+    if (kondisiParam) setFilterKondisi(kondisiParam);
+  }, [kondisiParam]);
 
   // Reset to page 1 when search/filter changes
   useFocusEffect(
@@ -61,7 +81,7 @@ export default function DashboardScreen() {
       setCurrentPage(1);
       setHasMore(true);
       loadAssets(false, 1);
-    }, [search, filterKategori])
+    }, [search, filterKategori, filterKondisi])
   );
 
   async function loadAssets(isRefresh = false, page = 1) {
@@ -79,6 +99,7 @@ export default function DashboardScreen() {
       const result = await assetService.getAll({
         search: search || undefined,
         kategori: filterKategori || undefined,
+        kondisi: (filterKondisi as Kondisi) || undefined,
         page,
         limit: PAGE_SIZE,
       });
@@ -245,68 +266,180 @@ export default function DashboardScreen() {
           </Text>
         </View>
 
-        {/* Search bar */}
-        <View
-          style={{
-            backgroundColor: "rgba(255,255,255,0.15)",
-            borderRadius: 14,
-            flexDirection: "row",
-            alignItems: "center",
-            paddingHorizontal: 14,
-          }}
-        >
-          <Feather name="search" size={16} color="rgba(255,255,255,0.6)" />
-          <TextInput
+        {/* Search bar + Filter button */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <View
             style={{
               flex: 1,
-              paddingVertical: 12,
-              paddingHorizontal: 10,
-              color: "white",
-              fontSize: 14,
+              backgroundColor: "rgba(255,255,255,0.15)",
+              borderRadius: 14,
+              flexDirection: "row",
+              alignItems: "center",
+              paddingHorizontal: 14,
             }}
-            placeholder="Cari nama atau nomor aset..."
-            placeholderTextColor="rgba(255,255,255,0.45)"
-            value={search}
-            onChangeText={setSearch}
-            returnKeyType="search"
-            onSubmitEditing={() => loadAssets()}
-          />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => setSearch("")}>
-              <Feather name="x" size={16} color="rgba(255,255,255,0.6)" />
-            </TouchableOpacity>
-          )}
+          >
+            <Feather name="search" size={16} color="rgba(255,255,255,0.6)" />
+            <TextInput
+              style={{
+                flex: 1,
+                paddingVertical: 12,
+                paddingHorizontal: 10,
+                color: "white",
+                fontSize: 14,
+              }}
+              placeholder="Cari aset..."
+              placeholderTextColor="rgba(255,255,255,0.45)"
+              value={search}
+              onChangeText={setSearch}
+              returnKeyType="search"
+              onSubmitEditing={() => loadAssets()}
+            />
+            {search.length > 0 && (
+              <TouchableOpacity onPress={() => setSearch("")}>
+                <Feather name="x" size={16} color="rgba(255,255,255,0.6)" />
+              </TouchableOpacity>
+            )}
+          </View>
+          <TouchableOpacity
+            onPress={() => setShowFilter(true)}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 14,
+              backgroundColor: activeFilterCount > 0 ? "white" : "rgba(255,255,255,0.15)",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Feather name="sliders" size={18} color={activeFilterCount > 0 ? "#135d3a" : "rgba(255,255,255,0.8)"} />
+            {activeFilterCount > 0 && (
+              <View style={{
+                position: "absolute", top: -4, right: -4,
+                backgroundColor: "#ef4444", borderRadius: 10,
+                width: 18, height: 18, alignItems: "center", justifyContent: "center",
+              }}>
+                <Text style={{ color: "white", fontSize: 10, fontWeight: "800" }}>{activeFilterCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Filter Chips */}
-      <View style={{ paddingTop: 14, paddingBottom: 12 }}>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={KATEGORI_OPTIONS}
-          keyExtractor={(item) => `kat-${item.value}`}
-          contentContainerStyle={{ paddingHorizontal: 16 }}
-          ItemSeparatorComponent={() => <View style={{ width: 8 }} />}
-          renderItem={({ item }) => (
+      {/* Active Filter Tags */}
+      {activeFilterCount > 0 && (
+        <View style={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 16, paddingTop: 12, gap: 8 }}>
+          {filterKategori !== "" && (
             <TouchableOpacity
+              onPress={() => setFilterKategori("")}
               style={{
-                paddingHorizontal: 16,
-                paddingVertical: 8,
-                borderRadius: 20,
-                backgroundColor: filterKategori === item.value ? "#135d3a" : "white",
-                borderWidth: 1,
-                borderColor: filterKategori === item.value ? "#135d3a" : "#e2e8f0",
+                flexDirection: "row", alignItems: "center",
+                backgroundColor: "#135d3a", borderRadius: 20,
+                paddingHorizontal: 12, paddingVertical: 6, gap: 6,
               }}
-              onPress={() => setFilterKategori(item.value)}
             >
-              <Text style={{ fontSize: 12, fontWeight: "600", color: filterKategori === item.value ? "white" : "#64748b" }}>
-                {item.label}
+              <Text style={{ color: "white", fontSize: 12, fontWeight: "600" }}>
+                {KATEGORI_OPTIONS.find(o => o.value === filterKategori)?.label}
               </Text>
+              <Feather name="x" size={12} color="white" />
             </TouchableOpacity>
           )}
-        />
-      </View>
+          {filterKondisi !== "" && (
+            <TouchableOpacity
+              onPress={() => setFilterKondisi("")}
+              style={{
+                flexDirection: "row", alignItems: "center",
+                backgroundColor: "#1e293b", borderRadius: 20,
+                paddingHorizontal: 12, paddingVertical: 6, gap: 6,
+              }}
+            >
+              <Text style={{ color: "white", fontSize: 12, fontWeight: "600" }}>
+                {KONDISI_OPTIONS.find(o => o.value === filterKondisi)?.label}
+              </Text>
+              <Feather name="x" size={12} color="white" />
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      {/* Filter Modal */}
+      <Modal visible={showFilter} animationType="slide" transparent>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}>
+          <View style={{
+            backgroundColor: "white",
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            maxHeight: "80%",
+          }}>
+            {/* Modal Header */}
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 20, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: "#f1f5f9" }}>
+              <Text style={{ fontSize: 18, fontWeight: "800", color: "#1e293b" }}>Filter Aset</Text>
+              <TouchableOpacity onPress={() => setShowFilter(false)} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: "#f1f5f9", alignItems: "center", justifyContent: "center" }}>
+                <Feather name="x" size={18} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ padding: 20 }} showsVerticalScrollIndicator={false}>
+              {/* Kategori Section */}
+              <Text style={{ fontSize: 13, fontWeight: "700", color: "#64748b", marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>Kategori</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
+                {KATEGORI_OPTIONS.map((opt) => (
+                  <TouchableOpacity
+                    key={`fk-${opt.value}`}
+                    onPress={() => setFilterKategori(opt.value)}
+                    style={{
+                      paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12,
+                      backgroundColor: filterKategori === opt.value ? "#135d3a" : "#f8fafc",
+                      borderWidth: 1,
+                      borderColor: filterKategori === opt.value ? "#135d3a" : "#e2e8f0",
+                    }}
+                  >
+                    <Text style={{ fontSize: 13, fontWeight: "600", color: filterKategori === opt.value ? "white" : "#475569" }}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Kondisi Section */}
+              <Text style={{ fontSize: 13, fontWeight: "700", color: "#64748b", marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>Kondisi</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
+                {KONDISI_OPTIONS.map((opt) => (
+                  <TouchableOpacity
+                    key={`fc-${opt.value}`}
+                    onPress={() => setFilterKondisi(opt.value)}
+                    style={{
+                      paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12,
+                      backgroundColor: filterKondisi === opt.value ? "#1e293b" : "#f8fafc",
+                      borderWidth: 1,
+                      borderColor: filterKondisi === opt.value ? "#1e293b" : "#e2e8f0",
+                    }}
+                  >
+                    <Text style={{ fontSize: 13, fontWeight: "600", color: filterKondisi === opt.value ? "white" : "#475569" }}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+
+            {/* Modal Footer */}
+            <View style={{ flexDirection: "row", gap: 10, padding: 20, paddingBottom: Platform.OS === "ios" ? 36 : 20, borderTopWidth: 1, borderTopColor: "#f1f5f9" }}>
+              <TouchableOpacity
+                onPress={() => { setFilterKategori(""); setFilterKondisi(""); }}
+                style={{ flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: "#f1f5f9", alignItems: "center" }}
+              >
+                <Text style={{ color: "#64748b", fontWeight: "700", fontSize: 14 }}>Reset</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowFilter(false)}
+                style={{ flex: 2, paddingVertical: 14, borderRadius: 14, backgroundColor: "#135d3a", alignItems: "center" }}
+              >
+                <Text style={{ color: "white", fontWeight: "700", fontSize: 14 }}>Terapkan Filter</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Asset List */}
       {loading ? (

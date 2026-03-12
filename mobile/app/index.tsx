@@ -457,8 +457,10 @@ export default function HomePage() {
                     { key: "HILANG" as const, label: "Hilang", icon: "help-circle" as const, color: "#64748b" },
                     { key: "BELUM_DICEK" as const, label: "Blm. Dicek", icon: "clock" as const, color: "#94a3b8" },
                   ]).map((item) => (
-                    <View
+                    <TouchableOpacity
                       key={item.key}
+                      activeOpacity={0.7}
+                      onPress={() => router.push({ pathname: "/(admin)/dashboard", params: { kondisi: item.key } })}
                       style={{
                         width: "31%",
                         backgroundColor: "#f8fafc",
@@ -476,7 +478,7 @@ export default function HomePage() {
                       <Text style={{ color: "#64748b", fontSize: 10, marginTop: 2, textAlign: "center" }}>
                         {item.label}
                       </Text>
-                    </View>
+                    </TouchableOpacity>
                   ))}
                 </View>
               </>
