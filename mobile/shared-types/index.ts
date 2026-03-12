@@ -15,6 +15,7 @@ export interface Asset {
   fotoTimestamp: string | null; // ISO datetime string
   latitude: number | null;
   longitude: number | null;
+  namaLokasi: string | null;
   kondisi: Kondisi;
   report: string | null;
   createdAt: string;

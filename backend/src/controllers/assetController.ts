@@ -77,7 +77,7 @@ export async function getAssetById(req: Request, res: Response): Promise<void> {
 export async function createAsset(req: Request, res: Response): Promise<void> {
   const {
     nomorAset, namaAset, kategori, quantity, satuanUnit,
-    latitude, longitude, kondisi, report,
+    latitude, longitude, namaLokasi, kondisi, report,
   } = req.body as Record<string, string | number | null>;
 
   if (!nomorAset || !namaAset || !kategori) {
@@ -100,6 +100,7 @@ export async function createAsset(req: Request, res: Response): Promise<void> {
       satuanUnit: satuanUnit ? String(satuanUnit) : "Unit",
       latitude: latitude != null ? Number(latitude) : null,
       longitude: longitude != null ? Number(longitude) : null,
+      namaLokasi: namaLokasi ? String(namaLokasi) : null,
       kondisi: (kondisi as "BAIK" | "RUSAK" | "RUSAK_BERAT" | "HILANG") ?? "BAIK",
       report: report ? String(report) : null,
     },
@@ -123,7 +124,7 @@ export async function updateAsset(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
   const {
     nomorAset, namaAset, kategori, quantity, satuanUnit,
-    latitude, longitude, kondisi, report,
+    latitude, longitude, namaLokasi, kondisi, report,
   } = req.body as Record<string, string | number | null | undefined>;
 
   const existing = await prisma.asset.findUnique({ where: { id } });
@@ -151,6 +152,7 @@ export async function updateAsset(req: Request, res: Response): Promise<void> {
       ...(satuanUnit != null && { satuanUnit: String(satuanUnit) }),
       latitude: latitude !== undefined ? (latitude != null ? Number(latitude) : null) : undefined,
       longitude: longitude !== undefined ? (longitude != null ? Number(longitude) : null) : undefined,
+      namaLokasi: namaLokasi !== undefined ? (namaLokasi != null ? String(namaLokasi) : null) : undefined,
       ...(kondisi != null && { kondisi: kondisi as "BAIK" | "RUSAK" | "RUSAK_BERAT" | "HILANG" }),
       report: report !== undefined ? (report != null ? String(report) : null) : undefined,
     },

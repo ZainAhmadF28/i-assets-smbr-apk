@@ -48,6 +48,7 @@ model Asset {
   fotoTimestamp DateTime?
   latitude      Float?
   longitude     Float?
+  namaLokasi    String?
   kondisi       Kondisi   @default(BAIK)
   report        String?
   createdAt     DateTime  @default(now())

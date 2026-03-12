@@ -47,6 +47,7 @@ export default function AddAssetScreen() {
     satuanUnit: "Unit",
     latitude: "",
     longitude: "",
+    namaLokasi: "",
     kondisi: "BAIK" as Kondisi,
     report: "",
   });
@@ -124,6 +125,7 @@ export default function AddAssetScreen() {
         satuanUnit: form.satuanUnit.trim() || "Unit",
         latitude: form.latitude ? Number(form.latitude) : null,
         longitude: form.longitude ? Number(form.longitude) : null,
+        namaLokasi: form.namaLokasi.trim() || null,
         kondisi: form.kondisi,
         report: form.report.trim() || null,
       });
@@ -260,6 +262,7 @@ export default function AddAssetScreen() {
               <InputField label="Longitude" placeholder="104.7754" value={form.longitude} onChangeText={(v) => setField("longitude", v)} error={errors.longitude} keyboardType="decimal-pad" />
             </View>
           </View>
+          <InputField label="Nama Lokasi (Opsional)" placeholder="Contoh: Gedung Timur, Lantai 2" value={form.namaLokasi} onChangeText={(v) => setField("namaLokasi", v)} style={{ marginTop: 12 }} />
         </View>
 
         {/* Kondisi */}

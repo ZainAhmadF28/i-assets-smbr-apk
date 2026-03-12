@@ -121,6 +121,14 @@ export default function GuestAssetDetailScreen() {
         {/* Lokasi */}
         <View style={{ backgroundColor: "white", borderRadius: 20, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#f1f5f9" }}>
           <Text style={{ fontSize: 13, fontWeight: "700", color: "#1e293b", marginBottom: 12 }}>Lokasi Aset</Text>
+          {asset.namaLokasi && (
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+              <Feather name="navigation" size={12} color="#135d3a" />
+              <Text style={{ color: "#334155", fontSize: 12, fontWeight: "600", marginLeft: 6 }}>
+                {asset.namaLokasi}
+              </Text>
+            </View>
+          )}
           {asset.latitude && asset.longitude && (
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
               <Feather name="map-pin" size={12} color="#135d3a" />

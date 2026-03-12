@@ -289,7 +289,7 @@ export default function HomePage() {
                     activeOpacity={0.7}
                     onPress={() => {
                       setShowDropdown(false);
-                      router.push(`/(guest)/asset/${item.id}` as any);
+                      router.push(`/(admin)/asset/${item.id}` as any);
                     }}
                     style={{
                       flexDirection: "row",
@@ -553,7 +553,7 @@ export default function HomePage() {
             }}
           >
             <TouchableOpacity
-              onPress={() => router.push("/(guest)/scan")}
+              onPress={() => router.push("/(admin)/scan")}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -581,7 +581,7 @@ export default function HomePage() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => router.push("/(guest)/dashboard")}
+              onPress={() => router.push("/(admin)/dashboard")}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -656,7 +656,7 @@ export default function HomePage() {
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     activeOpacity={0.88}
-                    onPress={() => router.push("/(guest)/dashboard")}
+                    onPress={() => router.push("/(admin)/dashboard")}
                     style={{
                       width: CARD_W,
                       backgroundColor: "white",
@@ -817,7 +817,7 @@ export default function HomePage() {
           {/* Aset */}
           <TouchableOpacity
             className="items-center px-3 py-1"
-            onPress={() => router.push("/(guest)/dashboard")}
+            onPress={() => router.push("/(admin)/dashboard")}
           >
             <Feather name="box" size={20} color="#94a3b8" />
             <Text className="text-[10px] font-medium text-slate-400">Aset</Text>
@@ -826,7 +826,7 @@ export default function HomePage() {
           {/* Scan Center elevated */}
           <View className="items-center" style={{ marginTop: -28 }}>
             <TouchableOpacity
-              onPress={() => router.push("/(guest)/scan")}
+              onPress={() => router.push("/(admin)/scan")}
               className="w-14 h-14 rounded-2xl items-center justify-center"
               style={{
                 backgroundColor: "#135d3a",

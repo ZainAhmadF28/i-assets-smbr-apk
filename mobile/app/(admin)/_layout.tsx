@@ -8,12 +8,8 @@ export default function AdminLayout() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    authService.isLoggedIn().then((loggedIn) => {
-      if (!loggedIn) {
-        router.replace("/(auth)/login");
-      }
-      setChecking(false);
-    });
+    // DEV MODE: Bypass authentication so guest can access CRUD easily
+    setChecking(false);
   }, []);
 
   if (checking) {

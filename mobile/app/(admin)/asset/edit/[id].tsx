@@ -46,6 +46,7 @@ export default function EditAssetScreen() {
     satuanUnit: "Unit",
     latitude: "",
     longitude: "",
+    namaLokasi: "",
     kondisi: "BAIK" as Kondisi,
     report: "",
   });
@@ -67,6 +68,7 @@ export default function EditAssetScreen() {
         satuanUnit: asset.satuanUnit,
         latitude: asset.latitude != null ? String(asset.latitude) : "",
         longitude: asset.longitude != null ? String(asset.longitude) : "",
+        namaLokasi: asset.namaLokasi ?? "",
         kondisi: asset.kondisi,
         report: asset.report ?? "",
       });
@@ -127,6 +129,7 @@ export default function EditAssetScreen() {
         satuanUnit: form.satuanUnit.trim() || "Unit",
         latitude: form.latitude ? Number(form.latitude) : null,
         longitude: form.longitude ? Number(form.longitude) : null,
+        namaLokasi: form.namaLokasi.trim() || null,
         kondisi: form.kondisi,
         report: form.report.trim() || null,
       });
@@ -222,6 +225,7 @@ export default function EditAssetScreen() {
               <InputField label="Longitude" placeholder="104.7754" value={form.longitude} onChangeText={(v) => setField("longitude", v)} error={errors.longitude} keyboardType="decimal-pad" />
             </View>
           </View>
+          <InputField label="Nama Lokasi (Opsional)" placeholder="Contoh: Gedung Timur, Lantai 2" value={form.namaLokasi} onChangeText={(v) => setField("namaLokasi", v)} style={{ marginTop: 12 }} />
         </View>
 
         {/* Kondisi */}
