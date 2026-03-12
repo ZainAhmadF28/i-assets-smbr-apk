@@ -7,6 +7,7 @@ const api = axios.create({
   timeout: API_TIMEOUT,
   headers: {
     "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true", // Bypass ngrok free tier interstitial page
   },
 });
 
