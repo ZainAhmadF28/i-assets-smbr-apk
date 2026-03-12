@@ -196,7 +196,7 @@ export default function DashboardScreen() {
         {/* Info */}
         <View style={{ padding: 12 }}>
           <Text
-            style={{ color: "#1e293b", fontWeight: "700", fontSize: 13, lineHeight: 18, marginBottom: 6 }}
+            style={{ color: "#1e293b", fontWeight: "700", fontSize: 13, lineHeight: 18, marginBottom: 4 }}
             numberOfLines={2}
           >
             {item.namaAset}
@@ -204,7 +204,7 @@ export default function DashboardScreen() {
           <Text style={{ color: "#94a3b8", fontSize: 10, marginBottom: 8 }} numberOfLines={1}>
             #{item.nomorAset}
           </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
             <Text style={{
               color: catColor,
               fontSize: 9,
@@ -217,8 +217,8 @@ export default function DashboardScreen() {
             }}>
               {item.kelasAsetSig || "Aset"}
             </Text>
-            <KondisiBadge kondisi={item.kondisi} />
           </View>
+          <KondisiBadge kondisi={item.kondisi} />
         </View>
       </TouchableOpacity>
     );
