@@ -9,14 +9,30 @@ export async function getActivityLogs(req: Request, res: Response): Promise<void
   const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
   const skip = (pageNum - 1) * limitNum;
 
-  const [data, total] = await Promise.all([
-    prisma.activityLog.findMany({
+  const [raw, total] = await Promise.all([
+    prisma.assetLog.findMany({
       skip,
       take: limitNum,
       orderBy: { createdAt: "desc" },
+      include: {
+        asset: {
+          select: { namaAset: true, nomorAset: true },
+        },
+      },
     }),
-    prisma.activityLog.count(),
+    prisma.assetLog.count(),
   ]);
+
+  // Map to the shape the mobile app expects
+  const data = raw.map((log) => ({
+    id: log.id,
+    action: log.action,
+    assetId: log.assetId,
+    assetName: log.asset?.namaAset ?? "Aset Dihapus",
+    assetNomor: log.asset?.nomorAset ?? "-",
+    details: log.catatan,
+    createdAt: log.createdAt,
+  }));
 
   res.json({ data, total, page: pageNum, limit: limitNum });
 }
