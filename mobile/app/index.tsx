@@ -581,7 +581,7 @@ export default function HomePage() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => router.push("/(admin)/dashboard")}
+              onPress={() => router.push("/(guest)/dashboard")}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -656,7 +656,7 @@ export default function HomePage() {
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     activeOpacity={0.88}
-                    onPress={() => router.push("/(admin)/dashboard")}
+                    onPress={() => router.push("/(guest)/dashboard")}
                     style={{
                       width: CARD_W,
                       backgroundColor: "white",
@@ -817,7 +817,7 @@ export default function HomePage() {
           {/* Aset */}
           <TouchableOpacity
             className="items-center px-3 py-1"
-            onPress={() => router.push("/(admin)/dashboard")}
+            onPress={() => router.push("/(guest)/dashboard")}
           >
             <Feather name="box" size={20} color="#94a3b8" />
             <Text className="text-[10px] font-medium text-slate-400">Aset</Text>

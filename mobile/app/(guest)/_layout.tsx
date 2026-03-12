@@ -11,6 +11,7 @@ export default function GuestLayout() {
         contentStyle: { backgroundColor: "#f3f4f6" },
       }}
     >
+      <Stack.Screen name="dashboard" options={{ headerShown: false }} />
       <Stack.Screen name="scan" options={{ title: "Scan QR Code" }} />
       <Stack.Screen name="asset/[id]" options={{ title: "Detail Aset" }} />
       <Stack.Screen name="activity-log" options={{ title: "Log Aktivitas" }} />
