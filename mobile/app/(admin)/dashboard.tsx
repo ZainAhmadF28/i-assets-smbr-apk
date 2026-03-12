@@ -47,31 +47,69 @@ export default function DashboardScreen() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [search, setSearch] = useState("");
   const [filterKategori, setFilterKategori] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
+  const PAGE_SIZE = 50;
+
+  // Reset to page 1 when search/filter changes
   useFocusEffect(
     useCallback(() => {
-      loadAssets();
+      setCurrentPage(1);
+      setHasMore(true);
+      loadAssets(false, 1);
     }, [search, filterKategori])
   );
 
-  async function loadAssets(isRefresh = false) {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
+  async function loadAssets(isRefresh = false, page = 1) {
+    if (isRefresh) {
+      setRefreshing(true);
+      page = 1;
+      setCurrentPage(1);
+      setHasMore(true);
+    } else if (page === 1) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
     try {
       const result = await assetService.getAll({
         search: search || undefined,
         kategori: filterKategori || undefined,
-        limit: 50,
+        page,
+        limit: PAGE_SIZE,
       });
-      setAssets(result.data);
+      const dedupe = (arr: Asset[]) => {
+        const seen = new Set<string>();
+        return arr.filter((a) => {
+          if (seen.has(a.id)) return false;
+          seen.add(a.id);
+          return true;
+        });
+      };
+      if (page === 1) {
+        setAssets(dedupe(result.data));
+      } else {
+        setAssets((prev) => dedupe([...prev, ...result.data]));
+      }
       setTotal(result.total);
+      setCurrentPage(page);
+      setHasMore(result.data.length >= PAGE_SIZE);
     } catch {
       Alert.alert("Error", "Gagal memuat data aset");
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLoadingMore(false);
+    }
+  }
+
+  function handleLoadMore() {
+    if (!loadingMore && hasMore && !loading) {
+      loadAssets(false, currentPage + 1);
     }
   }
 
@@ -287,6 +325,16 @@ export default function DashboardScreen() {
               onRefresh={() => loadAssets(true)}
               colors={["#135d3a"]}
             />
+          }
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loadingMore ? (
+              <View style={{ paddingVertical: 20, alignItems: "center" }}>
+                <ActivityIndicator size="small" color="#135d3a" />
+                <Text style={{ color: "#94a3b8", fontSize: 12, marginTop: 6 }}>Memuat lebih banyak...</Text>
+              </View>
+            ) : null
           }
           ListEmptyComponent={
             <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 64 }}>
