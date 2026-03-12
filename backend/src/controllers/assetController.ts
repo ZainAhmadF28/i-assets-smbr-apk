@@ -5,6 +5,24 @@ import prisma from "../lib/prisma";
 type Kategori = "BANGUNAN" | "KENDARAAN_DINAS" | "PERLENGKAPAN" | "TANAH";
 type Kondisi = "BAIK" | "RUSAK" | "RUSAK_BERAT";
 
+// ── GET /api/assets/stats ────────────────────────────────────────────────────
+export async function getAssetStats(_req: Request, res: Response): Promise<void> {
+  const [total, byKondisi] = await Promise.all([
+    prisma.asset.count(),
+    prisma.asset.groupBy({
+      by: ["kondisi"],
+      _count: { kondisi: true },
+    }),
+  ]);
+
+  const kondisiMap: Record<string, number> = { BAIK: 0, RUSAK: 0, RUSAK_BERAT: 0 };
+  for (const row of byKondisi) {
+    kondisiMap[row.kondisi] = row._count.kondisi;
+  }
+
+  res.json({ total, kondisi: kondisiMap });
+}
+
 // ── GET /api/assets ─────────────────────────────────────────────────────────
 export async function getAssets(req: Request, res: Response): Promise<void> {
   const { search, kategori, kondisi, page = "1", limit = "20" } = req.query as Record<string, string>;

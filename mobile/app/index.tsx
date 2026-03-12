@@ -10,6 +10,7 @@ import {
   FlatList,
   Dimensions,
   Image,
+  TextInput,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -28,6 +29,11 @@ type AssetUpdate = {
   gambar: string | null;
   updatedAt: string;
 };
+
+type AssetStats = {
+  total: number;
+  kondisi: { BAIK: number; RUSAK: number; RUSAK_BERAT: number };
+} | null;
 
 const KATEGORI_COLOR: Record<string, string> = {
   BANGUNAN: "#0ea5e9",
@@ -59,23 +65,55 @@ function timeAgo(dateString: string): string {
   return `${days} hari lalu`;
 }
 
-type StockData = {
-  price: number;
-  change: number;
-  changePct: number;
-  high: number;
-  low: number;
-  volume: number;
-} | null;
-
 export default function HomePage() {
   const router = useRouter();
-  const [stock, setStock] = useState<StockData>(null);
-  const [stockLoading, setStockLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<AssetUpdate[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [stats, setStats] = useState<AssetStats>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [recentAssets, setRecentAssets] = useState<AssetUpdate[]>([]);
   const [assetsLoading, setAssetsLoading] = useState(true);
   const [sliderIndex, setSliderIndex] = useState(0);
   const sliderRef = useRef<FlatList<AssetUpdate>>(null);
+
+  const fetchSearchResults = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+    setSearchLoading(true);
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/api/assets?search=${encodeURIComponent(query.trim())}&limit=6&page=1`
+      );
+      const json = await res.json();
+      if (json?.data) {
+        setSearchResults(json.data);
+        setShowDropdown(true);
+      }
+    } catch (_) {
+      // silent fail
+    } finally {
+      setSearchLoading(false);
+    }
+  }, []);
+
+  const onSearchChange = (text: string) => {
+    setSearchQuery(text);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    if (!text.trim()) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+    searchTimer.current = setTimeout(() => {
+      fetchSearchResults(text);
+    }, 200);
+  };
 
   const fetchRecentAssets = useCallback(async () => {
     try {
@@ -89,40 +127,23 @@ export default function HomePage() {
     }
   }, []);
 
-  const fetchStock = useCallback(async () => {
+  const fetchStats = useCallback(async () => {
     try {
-      const res = await fetch(
-        "https://query1.finance.yahoo.com/v8/finance/chart/SMBR.JK?interval=1d&range=1d",
-        { headers: { "User-Agent": "Mozilla/5.0" } }
-      );
+      const res = await fetch(`${API_BASE_URL}/api/assets/stats`);
       const json = await res.json();
-      const meta = json?.chart?.result?.[0]?.meta;
-      if (meta) {
-        const price = meta.regularMarketPrice ?? 0;
-        const prev = meta.previousClose ?? price;
-        const change = price - prev;
-        const changePct = prev !== 0 ? (change / prev) * 100 : 0;
-        setStock({
-          price,
-          change,
-          changePct,
-          high: meta.regularMarketDayHigh ?? 0,
-          low: meta.regularMarketDayLow ?? 0,
-          volume: meta.regularMarketVolume ?? 0,
-        });
-      }
+      if (json?.total !== undefined) setStats(json);
     } catch (_) {
-      // silent fail — keep showing last data
+      // silent fail
     } finally {
-      setStockLoading(false);
+      setStatsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchStock();
-    const interval = setInterval(fetchStock, 30000);
+    fetchStats();
+    const interval = setInterval(fetchStats, 60000);
     return () => clearInterval(interval);
-  }, [fetchStock]);
+  }, [fetchStats]);
 
   useEffect(() => {
     fetchRecentAssets();
@@ -142,6 +163,12 @@ export default function HomePage() {
     return () => clearInterval(timer);
   }, [recentAssets.length]);
 
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      fetchSearchResults(searchQuery);
+    }
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: "#f8fafc" }}>
       <StatusBar style="light" />
@@ -158,7 +185,6 @@ export default function HomePage() {
           style={{ height: 220 }}
           resizeMode="stretch"
         >
-          {/* Dark overlay */}
           <View
             className="pt-14 px-5"
             style={{ paddingBottom: 20 }}
@@ -167,7 +193,7 @@ export default function HomePage() {
           </View>
         </ImageBackground>
 
-        {/* White rounded content area — GoPay style */}
+        {/* White rounded content area */}
         <View
           style={{
             backgroundColor: "#f8fafc",
@@ -178,102 +204,297 @@ export default function HomePage() {
           }}
         >
 
-        {/* SMBR Stock Ticker */}
+        {/* Search Bar + Dropdown */}
+        <View style={{ paddingHorizontal: 20, marginBottom: 16, zIndex: 10 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "white",
+              borderRadius: showDropdown && searchResults.length > 0 ? 16 : 16,
+              paddingHorizontal: 16,
+              paddingVertical: 4,
+              borderWidth: 1,
+              borderColor: showDropdown && searchResults.length > 0 ? "#135d3a" : "#e2e8f0",
+              shadowColor: "#94a3b8",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.08,
+              shadowRadius: 8,
+              elevation: 2,
+            }}
+          >
+            <Feather name="search" size={18} color={showDropdown ? "#135d3a" : "#94a3b8"} />
+            <TextInput
+              placeholder="Cari nama atau nomor aset..."
+              placeholderTextColor="#94a3b8"
+              value={searchQuery}
+              onChangeText={onSearchChange}
+              onSubmitEditing={handleSearch}
+              returnKeyType="search"
+              style={{
+                flex: 1,
+                marginLeft: 10,
+                fontSize: 14,
+                color: "#1e293b",
+                paddingVertical: 12,
+              }}
+            />
+            {searchLoading && (
+              <ActivityIndicator size="small" color="#135d3a" style={{ marginRight: 8 }} />
+            )}
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                onPress={() => {
+                  setSearchQuery("");
+                  setSearchResults([]);
+                  setShowDropdown(false);
+                }}
+                activeOpacity={0.7}
+              >
+                <Feather name="x-circle" size={18} color="#cbd5e1" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Search Results Dropdown */}
+          {showDropdown && searchQuery.trim().length > 0 && (
+            <View
+              style={{
+                backgroundColor: "white",
+                borderRadius: 16,
+                marginTop: 8,
+                borderWidth: 1,
+                borderColor: "#f1f5f9",
+                shadowColor: "#94a3b8",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.2,
+                shadowRadius: 12,
+                elevation: 8,
+                overflow: "hidden",
+              }}
+            >
+              {searchResults.length === 0 && !searchLoading ? (
+                <View style={{ padding: 20, alignItems: "center" }}>
+                  <Feather name="search" size={24} color="#cbd5e1" />
+                  <Text style={{ color: "#94a3b8", fontSize: 13, marginTop: 8 }}>
+                    Tidak ada aset yang cocok
+                  </Text>
+                </View>
+              ) : (
+                searchResults.map((item, index) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setShowDropdown(false);
+                      router.push(`/(guest)/asset/${item.id}` as any);
+                    }}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      padding: 12,
+                      borderBottomWidth: index < searchResults.length - 1 ? 1 : 0,
+                      borderBottomColor: "#f1f5f9",
+                    }}
+                  >
+                    {/* Thumbnail */}
+                    {item.gambar ? (
+                      <Image
+                        source={{ uri: `${API_BASE_URL}${item.gambar}` }}
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 10,
+                          backgroundColor: "#f1f5f9",
+                        }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 10,
+                          backgroundColor: "#e8f5ee",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Feather name="box" size={20} color="#135d3a" />
+                      </View>
+                    )}
+
+                    {/* Info */}
+                    <View style={{ flex: 1, marginLeft: 12 }}>
+                      <Text
+                        style={{ color: "#1e293b", fontWeight: "700", fontSize: 13 }}
+                        numberOfLines={1}
+                      >
+                        {item.namaAset}
+                      </Text>
+                      <View style={{ flexDirection: "row", alignItems: "center", marginTop: 3 }}>
+                        <Text style={{ color: "#94a3b8", fontSize: 11 }}>
+                          #{item.nomorAset}
+                        </Text>
+                        <View
+                          style={{
+                            marginLeft: 8,
+                            backgroundColor: (KONDISI_COLOR[item.kondisi] ?? "#135d3a") + "18",
+                            borderRadius: 4,
+                            paddingHorizontal: 6,
+                            paddingVertical: 1,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: KONDISI_COLOR[item.kondisi] ?? "#135d3a",
+                              fontSize: 9,
+                              fontWeight: "700",
+                            }}
+                          >
+                            {KONDISI_LABEL[item.kondisi] ?? item.kondisi}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <Feather name="chevron-right" size={14} color="#cbd5e1" />
+                  </TouchableOpacity>
+                ))
+              )}
+            </View>
+          )}
+        </View>
+
+        {/* Asset Statistics Card */}
         <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
-          <TouchableOpacity
-            activeOpacity={0.85}
+          <View
             style={{
               borderRadius: 20,
-              backgroundColor: "rgba(19, 93, 58, 0.75)",
+              backgroundColor: "white",
+              padding: 18,
               borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.25)",
-              padding: 14,
-              shadowColor: "#135d3a",
+              borderColor: "#f1f5f9",
+              shadowColor: "#94a3b8",
               shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.35,
-              shadowRadius: 12,
+              shadowOpacity: 0.25,
+              shadowRadius: 14,
               elevation: 6,
             }}
           >
-              {/* Header row */}
-              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+            {/* Header */}
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+              <View
+                style={{
+                  backgroundColor: "#e8f5ee",
+                  borderRadius: 10,
+                  width: 36,
+                  height: 36,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: 10,
+                }}
+              >
+                <Feather name="bar-chart-2" size={18} color="#135d3a" />
+              </View>
+              <View>
+                <Text style={{ color: "#1e293b", fontWeight: "800", fontSize: 14 }}>
+                  Statistik Aset
+                </Text>
+                <Text style={{ color: "#94a3b8", fontSize: 11 }}>
+                  Ringkasan kondisi aset
+                </Text>
+              </View>
+            </View>
+
+            {statsLoading ? (
+              <View style={{ paddingVertical: 16, alignItems: "center" }}>
+                <ActivityIndicator size="small" color="#135d3a" />
+              </View>
+            ) : stats ? (
+              <>
+                {/* Total */}
                 <View
                   style={{
-                    backgroundColor: "rgba(255,255,255,0.25)",
-                    borderRadius: 8,
-                    paddingHorizontal: 8,
-                    paddingVertical: 3,
-                    marginRight: 8,
+                    backgroundColor: "#e8f5ee",
+                    borderRadius: 14,
+                    padding: 14,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 12,
                   }}
                 >
-                  <Text style={{ color: "white", fontWeight: "800", fontSize: 12 }}>SMBR</Text>
+                  <Text style={{ color: "#135d3a", fontSize: 28, fontWeight: "900" }}>
+                    {stats.total}
+                  </Text>
+                  <Text style={{ color: "#64748b", fontSize: 13, marginLeft: 10 }}>
+                    Total Aset Tercatat
+                  </Text>
                 </View>
-                <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>
-                  PT Semen Baturaja · IDX
-                </Text>
-                <View style={{ flex: 1 }} />
-                {stockLoading ? (
-                  <ActivityIndicator size="small" color="rgba(255,255,255,0.7)" />
-                ) : (
-                  <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 10 }}>Live ●</Text>
-                )}
-              </View>
 
-              {/* Price row */}
-              {stock ? (
-                <>
-                  <View style={{ flexDirection: "row", alignItems: "flex-end", marginBottom: 10 }}>
-                    <Text style={{ color: "white", fontSize: 28, fontWeight: "900", letterSpacing: -0.5 }}>
-                      Rp{stock.price.toLocaleString("id-ID")}
+                {/* Per Kondisi */}
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <View
+                    style={{
+                      flex: 1,
+                      backgroundColor: "#f0fdf4",
+                      borderRadius: 12,
+                      padding: 12,
+                      alignItems: "center",
+                      borderWidth: 1,
+                      borderColor: "#dcfce7",
+                    }}
+                  >
+                    <Text style={{ color: "#135d3a", fontSize: 22, fontWeight: "900" }}>
+                      {stats.kondisi.BAIK}
                     </Text>
-                    <View
-                      style={{
-                        marginLeft: 10,
-                        marginBottom: 4,
-                        backgroundColor: stock.change >= 0 ? "rgba(52,211,153,0.25)" : "rgba(248,113,113,0.25)",
-                        borderRadius: 8,
-                        paddingHorizontal: 8,
-                        paddingVertical: 3,
-                        flexDirection: "row",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Text style={{
-                        color: stock.change >= 0 ? "#6ee7b7" : "#fca5a5",
-                        fontSize: 12,
-                        fontWeight: "700",
-                      }}>
-                        {stock.change >= 0 ? "▲" : "▼"} {Math.abs(stock.changePct).toFixed(2)}%
-                      </Text>
-                    </View>
+                    <Text style={{ color: "#64748b", fontSize: 10, marginTop: 2 }}>
+                      Baik
+                    </Text>
                   </View>
-
-                  {/* H/L/Vol row */}
-                  <View style={{ flexDirection: "row", gap: 16 }}>
-                    <View>
-                      <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 10 }}>High</Text>
-                      <Text style={{ color: "rgba(255,255,255,0.9)", fontSize: 12, fontWeight: "600" }}>
-                        {stock.high.toLocaleString("id-ID")}
-                      </Text>
-                    </View>
-                    <View>
-                      <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 10 }}>Low</Text>
-                      <Text style={{ color: "rgba(255,255,255,0.9)", fontSize: 12, fontWeight: "600" }}>
-                        {stock.low.toLocaleString("id-ID")}
-                      </Text>
-                    </View>
-                    <View>
-                      <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 10 }}>Volume</Text>
-                      <Text style={{ color: "rgba(255,255,255,0.9)", fontSize: 12, fontWeight: "600" }}>
-                        {(stock.volume / 1000).toFixed(0)}K
-                      </Text>
-                    </View>
+                  <View
+                    style={{
+                      flex: 1,
+                      backgroundColor: "#fffbeb",
+                      borderRadius: 12,
+                      padding: 12,
+                      alignItems: "center",
+                      borderWidth: 1,
+                      borderColor: "#fef3c7",
+                    }}
+                  >
+                    <Text style={{ color: "#d97706", fontSize: 22, fontWeight: "900" }}>
+                      {stats.kondisi.RUSAK}
+                    </Text>
+                    <Text style={{ color: "#64748b", fontSize: 10, marginTop: 2 }}>
+                      Rusak
+                    </Text>
                   </View>
-                </>
-              ) : (
-                <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>Memuat data saham...</Text>
-              )}
-          </TouchableOpacity>
+                  <View
+                    style={{
+                      flex: 1,
+                      backgroundColor: "#fef2f2",
+                      borderRadius: 12,
+                      padding: 12,
+                      alignItems: "center",
+                      borderWidth: 1,
+                      borderColor: "#fecaca",
+                    }}
+                  >
+                    <Text style={{ color: "#dc2626", fontSize: 22, fontWeight: "900" }}>
+                      {stats.kondisi.RUSAK_BERAT}
+                    </Text>
+                    <Text style={{ color: "#64748b", fontSize: 10, marginTop: 2 }}>
+                      Rusak Berat
+                    </Text>
+                  </View>
+                </View>
+              </>
+            ) : (
+              <Text style={{ color: "#94a3b8", fontSize: 12 }}>Data tidak tersedia</Text>
+            )}
+          </View>
         </View>
 
         {/* Action Cards */}
@@ -343,37 +564,6 @@ export default function HomePage() {
               </View>
               <Feather name="chevron-right" size={16} color="#cbd5e1" />
             </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Stats */}
-        <View className="px-4 mt-5" style={{ flexDirection: "row" }}>
-          <View
-            className="flex-1 bg-white rounded-2xl p-4 items-center mr-1.5"
-            style={{ borderWidth: 1, borderColor: "#f1f5f9" }}
-          >
-            <Text className="text-xl font-black" style={{ color: "#135d3a" }}>
-              —
-            </Text>
-            <Text className="text-[10px] text-slate-400 mt-1">Total Aset</Text>
-          </View>
-          <View
-            className="flex-1 bg-white rounded-2xl p-4 items-center mx-1.5"
-            style={{ borderWidth: 1, borderColor: "#f1f5f9" }}
-          >
-            <Text className="text-xl font-black" style={{ color: "#135d3a" }}>
-              4
-            </Text>
-            <Text className="text-[10px] text-slate-400 mt-1">Kategori</Text>
-          </View>
-          <View
-            className="flex-1 bg-white rounded-2xl p-4 items-center ml-1.5"
-            style={{ borderWidth: 1, borderColor: "#f1f5f9" }}
-          >
-            <Text className="text-xl font-black" style={{ color: "#135d3a" }}>
-              —
-            </Text>
-            <Text className="text-[10px] text-slate-400 mt-1">Lokasi</Text>
           </View>
         </View>
 

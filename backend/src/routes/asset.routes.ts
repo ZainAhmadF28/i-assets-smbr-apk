@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   getAssets,
   getAssetById,
+  getAssetStats,
   createAsset,
   updateAsset,
   deleteAsset,
@@ -15,6 +16,7 @@ const router = Router();
 
 // Publik (Guest & Admin)
 router.get("/", getAssets);
+router.get("/stats", getAssetStats); // harus sebelum /:id
 router.get("/:id", getAssetById);
 router.get("/:id/qrcode", getQrCode);
 
