@@ -6,7 +6,7 @@
 //   Production  : https://your-server.com
 // =============================================
 
-export const API_BASE_URL = "https://db18-157-15-47-123.ngrok-free.app"; // Device fisik — IP LAN
+export const API_BASE_URL = "https://b843-157-15-47-123.ngrok-free.app"; // Device fisik — IP LAN
 // export const API_BASE_URL = "http://localhost:3000"; // iOS simulator / web
 // export const API_BASE_URL = "http://192.168.x.x:3000"; // Device fisik — ganti IP LAN
 

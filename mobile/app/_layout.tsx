@@ -11,6 +11,7 @@ import {
   Dimensions,
 } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
+import { NotificationProvider } from "../context/NotificationContext";
 
 // Prevent the native splash from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -118,7 +119,7 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <NotificationProvider>
       <StatusBar style="light" />
       <Stack
         screenOptions={{
@@ -133,7 +134,7 @@ export default function RootLayout() {
         <Stack.Screen name="(guest)" options={{ headerShown: false }} />
         <Stack.Screen name="(admin)" options={{ headerShown: false }} />
       </Stack>
-    </>
+    </NotificationProvider>
   );
 }
 

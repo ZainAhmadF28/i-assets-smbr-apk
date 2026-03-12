@@ -36,3 +36,42 @@ export async function getActivityLogs(req: Request, res: Response): Promise<void
 
   res.json({ data, total, page: pageNum, limit: limitNum });
 }
+
+// ── GET /api/activity-logs/new?since=ISO_DATE ───────────────────────────────
+export async function getNewLogsCount(req: Request, res: Response): Promise<void> {
+  const { since } = req.query as Record<string, string>;
+
+  if (!since) {
+    res.status(400).json({ error: "Missing 'since' query parameter" });
+    return;
+  }
+
+  const sinceDate = new Date(since);
+
+  const [count, latest] = await Promise.all([
+    prisma.assetLog.count({
+      where: { createdAt: { gt: sinceDate } },
+    }),
+    prisma.assetLog.findMany({
+      where: { createdAt: { gt: sinceDate } },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      include: {
+        asset: {
+          select: { namaAset: true, nomorAset: true },
+        },
+      },
+    }),
+  ]);
+
+  const data = latest.map((log) => ({
+    id: log.id,
+    action: log.action,
+    assetName: log.asset?.namaAset ?? "Aset Dihapus",
+    assetNomor: log.asset?.nomorAset ?? "-",
+    details: log.catatan,
+    createdAt: log.createdAt,
+  }));
+
+  res.json({ count, latest: data });
+}

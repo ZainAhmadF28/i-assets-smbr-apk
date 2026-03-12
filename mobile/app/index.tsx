@@ -11,11 +11,13 @@ import {
   Dimensions,
   Image,
   TextInput,
+  Animated,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Feather } from "@expo/vector-icons";
 import { API_BASE_URL } from "../config/apiConfig";
+import { useNotification } from "../context/NotificationContext";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 const CARD_W = SCREEN_W - 48;
@@ -72,6 +74,7 @@ function timeAgo(dateString: string): string {
 
 export default function HomePage() {
   const router = useRouter();
+  const { unreadCount, markAsSeen } = useNotification();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<AssetUpdate[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -83,6 +86,25 @@ export default function HomePage() {
   const [assetsLoading, setAssetsLoading] = useState(true);
   const [sliderIndex, setSliderIndex] = useState(0);
   const sliderRef = useRef<FlatList<AssetUpdate>>(null);
+  const badgeScale = useRef(new Animated.Value(0)).current;
+
+  // Animate badge when unreadCount changes
+  useEffect(() => {
+    if (unreadCount > 0) {
+      Animated.spring(badgeScale, {
+        toValue: 1,
+        friction: 5,
+        tension: 100,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(badgeScale, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [unreadCount]);
 
   const fetchSearchResults = useCallback(async (query: string) => {
     if (!query.trim()) {
@@ -144,17 +166,12 @@ export default function HomePage() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchStats();
-    const interval = setInterval(fetchStats, 60000);
-    return () => clearInterval(interval);
-  }, [fetchStats]);
-
-  useEffect(() => {
-    fetchRecentAssets();
-    const interval = setInterval(fetchRecentAssets, 60000);
-    return () => clearInterval(interval);
-  }, [fetchRecentAssets]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchStats();
+      fetchRecentAssets();
+    }, [fetchStats, fetchRecentAssets])
+  );
 
   useEffect(() => {
     if (recentAssets.length < 2) return;
@@ -801,9 +818,44 @@ export default function HomePage() {
           {/* Log Aktivitas */}
           <TouchableOpacity
             className="items-center px-3 py-1"
-            onPress={() => router.push("/(guest)/activity-log" as any)}
+            onPress={() => {
+              markAsSeen();
+              router.push("/(guest)/activity-log" as any);
+            }}
           >
-            <Feather name="activity" size={20} color="#94a3b8" />
+            <View>
+              <Feather name="activity" size={20} color="#94a3b8" />
+              {unreadCount > 0 && (
+                <Animated.View
+                  style={{
+                    position: "absolute",
+                    top: -6,
+                    right: -10,
+                    backgroundColor: "#ef4444",
+                    borderRadius: 10,
+                    minWidth: 18,
+                    height: 18,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    paddingHorizontal: 4,
+                    borderWidth: 2,
+                    borderColor: "white",
+                    transform: [{ scale: badgeScale }],
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "white",
+                      fontSize: 9,
+                      fontWeight: "800",
+                      textAlign: "center",
+                    }}
+                  >
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </Text>
+                </Animated.View>
+              )}
+            </View>
             <Text className="text-[10px] font-medium text-slate-400">Log</Text>
           </TouchableOpacity>
 

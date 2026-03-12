@@ -11,6 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { API_BASE_URL } from "../../config/apiConfig";
+import { useNotification } from "../../context/NotificationContext";
 
 type ActivityLog = {
   id: string;
@@ -56,6 +57,7 @@ function formatDate(dateString: string): string {
 
 export default function ActivityLogScreen() {
   const router = useRouter();
+  const { markAsSeen } = useNotification();
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -86,6 +88,7 @@ export default function ActivityLogScreen() {
   );
 
   useEffect(() => {
+    markAsSeen();
     fetchLogs(1, true);
   }, [fetchLogs]);
 
