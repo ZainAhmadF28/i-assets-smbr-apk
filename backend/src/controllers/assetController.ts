@@ -15,7 +15,7 @@ export async function getAssetStats(_req: Request, res: Response): Promise<void>
     }),
   ]);
 
-  const kondisiMap: Record<string, number> = { BAIK: 0, RUSAK: 0, RUSAK_BERAT: 0, HILANG: 0 };
+  const kondisiMap: Record<string, number> = { BAIK: 0, RUSAK: 0, RUSAK_BERAT: 0, HILANG: 0, BELUM_DICEK: 0 };
   for (const row of byKondisi) {
     kondisiMap[row.kondisi] = row._count.kondisi;
   }

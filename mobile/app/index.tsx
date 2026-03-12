@@ -32,7 +32,7 @@ type AssetUpdate = {
 
 type AssetStats = {
   total: number;
-  kondisi: { BAIK: number; RUSAK: number; RUSAK_BERAT: number; HILANG: number };
+  kondisi: { BAIK: number; RUSAK: number; RUSAK_BERAT: number; HILANG: number; BELUM_DICEK: number };
 } | null;
 
 const KELAS_ASET_COLOR: Record<string, string> = {
@@ -48,6 +48,7 @@ const KONDISI_COLOR: Record<string, string> = {
   RUSAK: "#f59e0b",
   RUSAK_BERAT: "#ef4444",
   HILANG: "#64748b",
+  BELUM_DICEK: "#94a3b8",
 };
 
 const KONDISI_LABEL: Record<string, string> = {
@@ -55,6 +56,7 @@ const KONDISI_LABEL: Record<string, string> = {
   RUSAK: "Rusak",
   RUSAK_BERAT: "Rusak Berat",
   HILANG: "Hilang",
+  BELUM_DICEK: "Belum Dicek",
 };
 
 function timeAgo(dateString: string): string {
@@ -447,90 +449,35 @@ export default function HomePage() {
                 </View>
 
                 {/* Per Kondisi */}
-                <View style={{ flexDirection: "row", gap: 8 }}>
-                  {/* Baik */}
-                  <View
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#f8fafc",
-                      borderRadius: 12,
-                      padding: 10,
-                      alignItems: "center",
-                      borderWidth: 1,
-                      borderColor: "#e2e8f0",
-                    }}
-                  >
-                    <Feather name="check-circle" size={18} color="#135d3a" style={{ marginBottom: 4 }} />
-                    <Text style={{ color: "#135d3a", fontSize: 18, fontWeight: "900" }}>
-                      {stats.kondisi.BAIK}
-                    </Text>
-                    <Text style={{ color: "#64748b", fontSize: 10, marginTop: 2, textAlign: "center" }}>
-                      Baik
-                    </Text>
-                  </View>
-
-                  {/* Rusak */}
-                  <View
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#f8fafc",
-                      borderRadius: 12,
-                      padding: 10,
-                      alignItems: "center",
-                      borderWidth: 1,
-                      borderColor: "#e2e8f0",
-                    }}
-                  >
-                    <Feather name="alert-triangle" size={18} color="#135d3a" style={{ marginBottom: 4 }} />
-                    <Text style={{ color: "#135d3a", fontSize: 18, fontWeight: "900" }}>
-                      {stats.kondisi.RUSAK}
-                    </Text>
-                    <Text style={{ color: "#64748b", fontSize: 10, marginTop: 2, textAlign: "center" }}>
-                      Rusak
-                    </Text>
-                  </View>
-
-                  {/* Rusak Berat */}
-                  <View
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#f8fafc",
-                      borderRadius: 12,
-                      padding: 10,
-                      alignItems: "center",
-                      borderWidth: 1,
-                      borderColor: "#e2e8f0",
-                    }}
-                  >
-                    <Feather name="x-circle" size={18} color="#135d3a" style={{ marginBottom: 4 }} />
-                    <Text style={{ color: "#135d3a", fontSize: 18, fontWeight: "900" }}>
-                      {stats.kondisi.RUSAK_BERAT}
-                    </Text>
-                    <Text style={{ color: "#64748b", fontSize: 10, marginTop: 2, textAlign: "center" }}>
-                      Rsk. Berat
-                    </Text>
-                  </View>
-
-                  {/* Hilang */}
-                  <View
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#f8fafc",
-                      borderRadius: 12,
-                      padding: 10,
-                      alignItems: "center",
-                      borderWidth: 1,
-                      borderColor: "#e2e8f0",
-                    }}
-                  >
-                    <Feather name="help-circle" size={18} color="#135d3a" style={{ marginBottom: 4 }} />
-                    <Text style={{ color: "#135d3a", fontSize: 18, fontWeight: "900" }}>
-                      {stats.kondisi.HILANG}
-                    </Text>
-                    <Text style={{ color: "#64748b", fontSize: 10, marginTop: 2, textAlign: "center" }}>
-                      Hilang
-                    </Text>
-                  </View>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                  {([
+                    { key: "BAIK" as const, label: "Baik", icon: "check-circle" as const, color: "#10b981" },
+                    { key: "RUSAK" as const, label: "Rusak", icon: "alert-triangle" as const, color: "#f59e0b" },
+                    { key: "RUSAK_BERAT" as const, label: "Rsk. Berat", icon: "x-circle" as const, color: "#ef4444" },
+                    { key: "HILANG" as const, label: "Hilang", icon: "help-circle" as const, color: "#64748b" },
+                    { key: "BELUM_DICEK" as const, label: "Blm. Dicek", icon: "clock" as const, color: "#94a3b8" },
+                  ]).map((item) => (
+                    <View
+                      key={item.key}
+                      style={{
+                        width: "31%",
+                        backgroundColor: "#f8fafc",
+                        borderRadius: 12,
+                        padding: 10,
+                        alignItems: "center",
+                        borderWidth: 1,
+                        borderColor: "#e2e8f0",
+                      }}
+                    >
+                      <Feather name={item.icon} size={18} color={item.color} style={{ marginBottom: 4 }} />
+                      <Text style={{ color: "#135d3a", fontSize: 18, fontWeight: "900" }}>
+                        {stats.kondisi[item.key]}
+                      </Text>
+                      <Text style={{ color: "#64748b", fontSize: 10, marginTop: 2, textAlign: "center" }}>
+                        {item.label}
+                      </Text>
+                    </View>
+                  ))}
                 </View>
               </>
             ) : (
