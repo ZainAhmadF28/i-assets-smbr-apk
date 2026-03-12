@@ -25,6 +25,7 @@ enum Kondisi {
   BAIK
   RUSAK
   RUSAK_BERAT
+  HILANG
 }
 
 model User {

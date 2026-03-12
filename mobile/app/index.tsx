@@ -32,7 +32,7 @@ type AssetUpdate = {
 
 type AssetStats = {
   total: number;
-  kondisi: { BAIK: number; RUSAK: number; RUSAK_BERAT: number };
+  kondisi: { BAIK: number; RUSAK: number; RUSAK_BERAT: number; HILANG: number };
 } | null;
 
 const KATEGORI_COLOR: Record<string, string> = {
@@ -46,12 +46,14 @@ const KONDISI_COLOR: Record<string, string> = {
   BAIK: "#135d3a",
   RUSAK: "#f59e0b",
   RUSAK_BERAT: "#ef4444",
+  HILANG: "#64748b",
 };
 
 const KONDISI_LABEL: Record<string, string> = {
   BAIK: "Baik",
   RUSAK: "Rusak",
   RUSAK_BERAT: "Rusak Berat",
+  HILANG: "Hilang",
 };
 
 function timeAgo(dateString: string): string {
@@ -386,7 +388,7 @@ export default function HomePage() {
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
               <View
                 style={{
-                  backgroundColor: "#e8f5ee",
+                  backgroundColor: "#135d3a",
                   borderRadius: 10,
                   width: 36,
                   height: 36,
@@ -395,7 +397,7 @@ export default function HomePage() {
                   marginRight: 10,
                 }}
               >
-                <Feather name="bar-chart-2" size={18} color="#135d3a" />
+                <Feather name="bar-chart-2" size={18} color="#ffffff" />
               </View>
               <View>
                 <Text style={{ color: "#1e293b", fontWeight: "800", fontSize: 14 }}>
@@ -416,77 +418,116 @@ export default function HomePage() {
                 {/* Total */}
                 <View
                   style={{
-                    backgroundColor: "#e8f5ee",
+                    backgroundColor: "#135d3a",
                     borderRadius: 14,
-                    padding: 14,
+                    padding: 18,
                     flexDirection: "row",
                     alignItems: "center",
                     justifyContent: "center",
                     marginBottom: 12,
+                    shadowColor: "#135d3a",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 8,
+                    elevation: 5,
                   }}
                 >
-                  <Text style={{ color: "#135d3a", fontSize: 28, fontWeight: "900" }}>
-                    {stats.total}
-                  </Text>
-                  <Text style={{ color: "#64748b", fontSize: 13, marginLeft: 10 }}>
-                    Total Aset Tercatat
-                  </Text>
+                  <View style={{ marginRight: 12, backgroundColor: "rgba(255,255,255,0.2)", padding: 8, borderRadius: 10 }}>
+                    <Feather name="box" size={24} color="white" />
+                  </View>
+                  <View>
+                    <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, fontWeight: "600" }}>
+                      Total Aset Tercatat
+                    </Text>
+                    <Text style={{ color: "white", fontSize: 26, fontWeight: "900", marginTop: -2 }}>
+                      {stats.total}
+                    </Text>
+                  </View>
                 </View>
 
                 {/* Per Kondisi */}
                 <View style={{ flexDirection: "row", gap: 8 }}>
+                  {/* Baik */}
                   <View
                     style={{
                       flex: 1,
-                      backgroundColor: "#f0fdf4",
+                      backgroundColor: "#f8fafc",
                       borderRadius: 12,
-                      padding: 12,
+                      padding: 10,
                       alignItems: "center",
                       borderWidth: 1,
-                      borderColor: "#dcfce7",
+                      borderColor: "#e2e8f0",
                     }}
                   >
-                    <Text style={{ color: "#135d3a", fontSize: 22, fontWeight: "900" }}>
+                    <Feather name="check-circle" size={18} color="#135d3a" style={{ marginBottom: 4 }} />
+                    <Text style={{ color: "#135d3a", fontSize: 18, fontWeight: "900" }}>
                       {stats.kondisi.BAIK}
                     </Text>
-                    <Text style={{ color: "#64748b", fontSize: 10, marginTop: 2 }}>
+                    <Text style={{ color: "#64748b", fontSize: 10, marginTop: 2, textAlign: "center" }}>
                       Baik
                     </Text>
                   </View>
+
+                  {/* Rusak */}
                   <View
                     style={{
                       flex: 1,
-                      backgroundColor: "#fffbeb",
+                      backgroundColor: "#f8fafc",
                       borderRadius: 12,
-                      padding: 12,
+                      padding: 10,
                       alignItems: "center",
                       borderWidth: 1,
-                      borderColor: "#fef3c7",
+                      borderColor: "#e2e8f0",
                     }}
                   >
-                    <Text style={{ color: "#d97706", fontSize: 22, fontWeight: "900" }}>
+                    <Feather name="alert-triangle" size={18} color="#135d3a" style={{ marginBottom: 4 }} />
+                    <Text style={{ color: "#135d3a", fontSize: 18, fontWeight: "900" }}>
                       {stats.kondisi.RUSAK}
                     </Text>
-                    <Text style={{ color: "#64748b", fontSize: 10, marginTop: 2 }}>
+                    <Text style={{ color: "#64748b", fontSize: 10, marginTop: 2, textAlign: "center" }}>
                       Rusak
                     </Text>
                   </View>
+
+                  {/* Rusak Berat */}
                   <View
                     style={{
                       flex: 1,
-                      backgroundColor: "#fef2f2",
+                      backgroundColor: "#f8fafc",
                       borderRadius: 12,
-                      padding: 12,
+                      padding: 10,
                       alignItems: "center",
                       borderWidth: 1,
-                      borderColor: "#fecaca",
+                      borderColor: "#e2e8f0",
                     }}
                   >
-                    <Text style={{ color: "#dc2626", fontSize: 22, fontWeight: "900" }}>
+                    <Feather name="x-circle" size={18} color="#135d3a" style={{ marginBottom: 4 }} />
+                    <Text style={{ color: "#135d3a", fontSize: 18, fontWeight: "900" }}>
                       {stats.kondisi.RUSAK_BERAT}
                     </Text>
-                    <Text style={{ color: "#64748b", fontSize: 10, marginTop: 2 }}>
-                      Rusak Berat
+                    <Text style={{ color: "#64748b", fontSize: 10, marginTop: 2, textAlign: "center" }}>
+                      Rsk. Berat
+                    </Text>
+                  </View>
+
+                  {/* Hilang */}
+                  <View
+                    style={{
+                      flex: 1,
+                      backgroundColor: "#f8fafc",
+                      borderRadius: 12,
+                      padding: 10,
+                      alignItems: "center",
+                      borderWidth: 1,
+                      borderColor: "#e2e8f0",
+                    }}
+                  >
+                    <Feather name="help-circle" size={18} color="#135d3a" style={{ marginBottom: 4 }} />
+                    <Text style={{ color: "#135d3a", fontSize: 18, fontWeight: "900" }}>
+                      {stats.kondisi.HILANG}
+                    </Text>
+                    <Text style={{ color: "#64748b", fontSize: 10, marginTop: 2, textAlign: "center" }}>
+                      Hilang
                     </Text>
                   </View>
                 </View>

@@ -1,7 +1,7 @@
 // Tipe data utama untuk I-Asset SMBR
 
 export type Kategori = "BANGUNAN" | "KENDARAAN_DINAS" | "PERLENGKAPAN" | "TANAH";
-export type Kondisi = "BAIK" | "RUSAK" | "RUSAK_BERAT";
+export type Kondisi = "BAIK" | "RUSAK" | "RUSAK_BERAT" | "HILANG";
 export type Role = "ADMIN";
 
 export interface Asset {
@@ -63,10 +63,12 @@ export const KONDISI_LABEL: Record<Kondisi, string> = {
   BAIK: "Baik",
   RUSAK: "Rusak",
   RUSAK_BERAT: "Rusak Berat",
+  HILANG: "Hilang",
 };
 
 export const KONDISI_COLOR: Record<Kondisi, string> = {
   BAIK: "#16a34a",
   RUSAK: "#d97706",
   RUSAK_BERAT: "#dc2626",
+  HILANG: "#64748b", // slate gray for missing
 };

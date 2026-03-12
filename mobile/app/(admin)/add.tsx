@@ -30,6 +30,7 @@ const KONDISI_OPTIONS: Array<{ label: string; value: Kondisi }> = [
   { label: "Baik", value: "BAIK" },
   { label: "Rusak", value: "RUSAK" },
   { label: "Rusak Berat", value: "RUSAK_BERAT" },
+  { label: "Hilang", value: "HILANG" },
 ];
 
 export default function AddAssetScreen() {
@@ -264,15 +265,17 @@ export default function AddAssetScreen() {
         {/* Kondisi */}
         <View className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
           <Text className="text-sm font-semibold text-gray-700 mb-3">Kondisi Aset</Text>
-          <View className="flex-row gap-3">
+          <View className="flex-row flex-wrap gap-3">
             {KONDISI_OPTIONS.map((opt) => (
               <TouchableOpacity
                 key={opt.value}
-                className={`flex-1 py-3 rounded-xl items-center border ${
+                style={{ width: "47%" }}
+                className={`py-3 rounded-xl items-center border ${
                   form.kondisi === opt.value
                     ? opt.value === "BAIK" ? "bg-green-600 border-green-600"
                       : opt.value === "RUSAK" ? "bg-amber-500 border-amber-500"
-                      : "bg-red-600 border-red-600"
+                      : opt.value === "RUSAK_BERAT" ? "bg-red-600 border-red-600"
+                      : "bg-slate-500 border-slate-500"
                     : "bg-white border-gray-200"
                 }`}
                 onPress={() => setField("kondisi", opt.value)}

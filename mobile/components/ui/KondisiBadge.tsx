@@ -11,6 +11,7 @@ const badgeStyles: Record<Kondisi, string> = {
   BAIK:        "bg-green-100 text-green-700",
   RUSAK:       "bg-amber-100 text-amber-700",
   RUSAK_BERAT: "bg-red-100 text-red-700",
+  HILANG:      "bg-slate-100 text-slate-700",
 };
 
 export default function KondisiBadge({ kondisi }: KondisiBadgeProps) {

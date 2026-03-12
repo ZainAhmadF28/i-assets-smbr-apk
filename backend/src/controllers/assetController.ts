@@ -3,7 +3,7 @@ import QRCode from "qrcode";
 import prisma from "../lib/prisma";
 
 type Kategori = "BANGUNAN" | "KENDARAAN_DINAS" | "PERLENGKAPAN" | "TANAH";
-type Kondisi = "BAIK" | "RUSAK" | "RUSAK_BERAT";
+type Kondisi = "BAIK" | "RUSAK" | "RUSAK_BERAT" | "HILANG";
 
 // ── GET /api/assets/stats ────────────────────────────────────────────────────
 export async function getAssetStats(_req: Request, res: Response): Promise<void> {
@@ -15,7 +15,7 @@ export async function getAssetStats(_req: Request, res: Response): Promise<void>
     }),
   ]);
 
-  const kondisiMap: Record<string, number> = { BAIK: 0, RUSAK: 0, RUSAK_BERAT: 0 };
+  const kondisiMap: Record<string, number> = { BAIK: 0, RUSAK: 0, RUSAK_BERAT: 0, HILANG: 0 };
   for (const row of byKondisi) {
     kondisiMap[row.kondisi] = row._count.kondisi;
   }
@@ -48,7 +48,7 @@ export async function getAssets(req: Request, res: Response): Promise<void> {
     whereFilter.kategori = kategori as Kategori;
   }
 
-  if (kondisi && ["BAIK", "RUSAK", "RUSAK_BERAT"].includes(kondisi)) {
+  if (kondisi && ["BAIK", "RUSAK", "RUSAK_BERAT", "HILANG"].includes(kondisi)) {
     whereFilter.kondisi = kondisi as Kondisi;
   }
 
@@ -100,7 +100,7 @@ export async function createAsset(req: Request, res: Response): Promise<void> {
       satuanUnit: satuanUnit ? String(satuanUnit) : "Unit",
       latitude: latitude != null ? Number(latitude) : null,
       longitude: longitude != null ? Number(longitude) : null,
-      kondisi: (kondisi as "BAIK" | "RUSAK" | "RUSAK_BERAT") ?? "BAIK",
+      kondisi: (kondisi as "BAIK" | "RUSAK" | "RUSAK_BERAT" | "HILANG") ?? "BAIK",
       report: report ? String(report) : null,
     },
   });
@@ -151,7 +151,7 @@ export async function updateAsset(req: Request, res: Response): Promise<void> {
       ...(satuanUnit != null && { satuanUnit: String(satuanUnit) }),
       latitude: latitude !== undefined ? (latitude != null ? Number(latitude) : null) : undefined,
       longitude: longitude !== undefined ? (longitude != null ? Number(longitude) : null) : undefined,
-      ...(kondisi != null && { kondisi: kondisi as "BAIK" | "RUSAK" | "RUSAK_BERAT" }),
+      ...(kondisi != null && { kondisi: kondisi as "BAIK" | "RUSAK" | "RUSAK_BERAT" | "HILANG" }),
       report: report !== undefined ? (report != null ? String(report) : null) : undefined,
     },
   });
