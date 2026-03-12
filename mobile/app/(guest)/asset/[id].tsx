@@ -12,7 +12,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { assetService } from "@services/assetService";
 import type { Asset } from "@shared-types/index";
-import { KATEGORI_LABEL } from "@shared-types/index";
 import KondisiBadge from "@components/ui/KondisiBadge";
 import MapViewer from "@components/maps/MapViewer";
 
@@ -69,7 +68,7 @@ export default function GuestAssetDetailScreen() {
     );
   }
 
-  const photoUrl = assetService.getPhotoUrl(asset.gambar);
+  const photoUrl = assetService.getPhotoUrl(asset.fotoUrl);
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
@@ -83,15 +82,7 @@ export default function GuestAssetDetailScreen() {
             <Text style={{ color: "#94a3b8", fontSize: 13, marginTop: 10 }}>Foto belum tersedia</Text>
           </View>
         )}
-        {asset.fotoTimestamp && (
-          <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: "#f8fafc", borderTopWidth: 1, borderTopColor: "#f1f5f9", flexDirection: "row", alignItems: "center" }}>
-            <Feather name="camera" size={11} color="#94a3b8" />
-            <Text style={{ color: "#94a3b8", fontSize: 11, marginLeft: 6 }}>
-              Foto diambil:{" "}
-              {new Date(asset.fotoTimestamp).toLocaleString("id-ID", { dateStyle: "long", timeStyle: "short" })}
-            </Text>
-          </View>
-        )}
+
       </View>
 
       <View className="px-4 pt-4 pb-8">
@@ -106,26 +97,27 @@ export default function GuestAssetDetailScreen() {
         {/* Info Grid */}
         <View className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
           <Text className="text-sm font-semibold text-gray-700 mb-3">Informasi Aset</Text>
-          <InfoRow label="Kategori" value={KATEGORI_LABEL[asset.kategori]} />
-          <InfoRow label="Jumlah" value={`${asset.quantity} ${asset.satuanUnit}`} />
+          <InfoRow label="Kelas SIG" value={asset.kelasAsetSig || "-"} />
+          <InfoRow label="Site" value={asset.site || "-"} />
+          <InfoRow label="Jumlah" value={`${asset.qty} ${asset.satuan || "PC"}`} />
         </View>
 
-        {/* Report */}
-        {asset.report && (
+        {/* Keterangan */}
+        {asset.keterangan && (
           <View className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
-            <Text className="text-sm font-semibold text-gray-700 mb-2">Catatan Inventarisasi</Text>
-            <Text className="text-gray-600 text-sm leading-relaxed">{asset.report}</Text>
+            <Text className="text-sm font-semibold text-gray-700 mb-2">Catatan/Keterangan</Text>
+            <Text className="text-gray-600 text-sm leading-relaxed">{asset.keterangan}</Text>
           </View>
         )}
 
         {/* Lokasi */}
         <View style={{ backgroundColor: "white", borderRadius: 20, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#f1f5f9" }}>
           <Text style={{ fontSize: 13, fontWeight: "700", color: "#1e293b", marginBottom: 12 }}>Lokasi Aset</Text>
-          {asset.namaLokasi && (
+          {asset.site && (
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
               <Feather name="navigation" size={12} color="#135d3a" />
               <Text style={{ color: "#334155", fontSize: 12, fontWeight: "600", marginLeft: 6 }}>
-                {asset.namaLokasi}
+                Site: {asset.site}
               </Text>
             </View>
           )}

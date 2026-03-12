@@ -15,13 +15,14 @@ import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { Feather } from "@expo/vector-icons";
 import { assetService } from "@services/assetService";
-import type { Kategori, Kondisi } from "@shared-types/index";
+import type { Kondisi } from "@shared-types/index";
 import InputField from "@components/ui/InputField";
 import Button from "@components/ui/Button";
 
-const KATEGORI_OPTIONS: Array<{ label: string; value: Kategori }> = [
+const KATEGORI_OPTIONS: Array<{ label: string; value: string }> = [
   { label: "Bangunan", value: "BANGUNAN" },
-  { label: "Kendaraan Dinas", value: "KENDARAAN_DINAS" },
+  { label: "Infrastruktur", value: "INFRASTRUKTUR" },
+  { label: "Kendaraan & Alat Berat", value: "KENDARAAN & ALAT BERAT" },
   { label: "Perlengkapan", value: "PERLENGKAPAN" },
   { label: "Tanah", value: "TANAH" },
 ];
@@ -42,14 +43,14 @@ export default function AddAssetScreen() {
   const [form, setForm] = useState({
     nomorAset: "",
     namaAset: "",
-    kategori: "BANGUNAN" as Kategori,
-    quantity: "1",
-    satuanUnit: "Unit",
+    kelasAsetSig: "BANGUNAN",
+    qty: "1",
+    satuan: "Unit",
     latitude: "",
     longitude: "",
-    namaLokasi: "",
+    site: "",
     kondisi: "BAIK" as Kondisi,
-    report: "",
+    keterangan: "",
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof typeof form, string>>>({});
@@ -63,8 +64,8 @@ export default function AddAssetScreen() {
     const newErrors: typeof errors = {};
     if (!form.nomorAset.trim()) newErrors.nomorAset = "Nomor aset wajib diisi";
     if (!form.namaAset.trim()) newErrors.namaAset = "Nama aset wajib diisi";
-    if (!form.quantity || isNaN(Number(form.quantity)) || Number(form.quantity) < 1)
-      newErrors.quantity = "Jumlah harus berupa angka positif";
+    if (!form.qty || isNaN(Number(form.qty)) || Number(form.qty) < 1)
+      newErrors.qty = "Jumlah harus berupa angka positif";
     if (form.latitude && isNaN(Number(form.latitude)))
       newErrors.latitude = "Latitude harus berupa angka";
     if (form.longitude && isNaN(Number(form.longitude)))
@@ -120,14 +121,14 @@ export default function AddAssetScreen() {
       const created = await assetService.create({
         nomorAset: form.nomorAset.trim(),
         namaAset: form.namaAset.trim(),
-        kategori: form.kategori,
-        quantity: Number(form.quantity),
-        satuanUnit: form.satuanUnit.trim() || "Unit",
+        kelasAsetSig: form.kelasAsetSig,
+        qty: Number(form.qty),
+        satuan: form.satuan.trim() || "Unit",
         latitude: form.latitude ? Number(form.latitude) : null,
         longitude: form.longitude ? Number(form.longitude) : null,
-        namaLokasi: form.namaLokasi.trim() || null,
+        site: form.site.trim() || null,
         kondisi: form.kondisi,
-        report: form.report.trim() || null,
+        keterangan: form.keterangan.trim() || null,
       });
 
       // Upload foto jika ada
@@ -212,13 +213,13 @@ export default function AddAssetScreen() {
                   paddingHorizontal: 16,
                   paddingVertical: 8,
                   borderRadius: 12,
-                  backgroundColor: form.kategori === opt.value ? "#135d3a" : "white",
+                  backgroundColor: form.kelasAsetSig === opt.value ? "#135d3a" : "white",
                   borderWidth: 1,
-                  borderColor: form.kategori === opt.value ? "#135d3a" : "#e2e8f0",
+                  borderColor: form.kelasAsetSig === opt.value ? "#135d3a" : "#e2e8f0",
                 }}
-                onPress={() => setField("kategori", opt.value)}
+                onPress={() => setField("kelasAsetSig", opt.value)}
               >
-                <Text style={{ fontSize: 13, fontWeight: "600", color: form.kategori === opt.value ? "white" : "#64748b" }}>
+                <Text style={{ fontSize: 13, fontWeight: "600", color: form.kelasAsetSig === opt.value ? "white" : "#64748b" }}>
                   {opt.label}
                 </Text>
               </TouchableOpacity>
@@ -227,10 +228,10 @@ export default function AddAssetScreen() {
 
           <View className="flex-row gap-3">
             <View className="flex-1">
-              <InputField label="Jumlah" required placeholder="1" value={form.quantity} onChangeText={(v) => setField("quantity", v)} error={errors.quantity} keyboardType="numeric" />
+              <InputField label="Jumlah" required placeholder="1" value={form.qty} onChangeText={(v) => setField("qty", v)} error={errors.qty} keyboardType="numeric" />
             </View>
             <View className="flex-1">
-              <InputField label="Satuan" placeholder="Unit" value={form.satuanUnit} onChangeText={(v) => setField("satuanUnit", v)} />
+              <InputField label="Satuan" placeholder="Unit" value={form.satuan} onChangeText={(v) => setField("satuan", v)} />
             </View>
           </View>
         </View>
@@ -262,7 +263,7 @@ export default function AddAssetScreen() {
               <InputField label="Longitude" placeholder="104.7754" value={form.longitude} onChangeText={(v) => setField("longitude", v)} error={errors.longitude} keyboardType="decimal-pad" />
             </View>
           </View>
-          <InputField label="Nama Lokasi (Opsional)" placeholder="Contoh: Gedung Timur, Lantai 2" value={form.namaLokasi} onChangeText={(v) => setField("namaLokasi", v)} style={{ marginTop: 12 }} />
+          <InputField label="Site (Opsional)" placeholder="Contoh: Gedung Timur, Lantai 2" value={form.site} onChangeText={(v) => setField("site", v)} style={{ marginTop: 12 }} />
         </View>
 
         {/* Kondisi */}
@@ -291,13 +292,13 @@ export default function AddAssetScreen() {
           </View>
         </View>
 
-        {/* Report */}
+        {/* Keterangan */}
         <View className="bg-white rounded-2xl p-4 mb-6 shadow-sm">
           <InputField
-            label="Catatan / Report"
+            label="Catatan / Keterangan"
             placeholder="Contoh: Kunci pintu rusak — dalam perbaikan"
-            value={form.report}
-            onChangeText={(v) => setField("report", v)}
+            value={form.keterangan}
+            onChangeText={(v) => setField("keterangan", v)}
             multiline
             numberOfLines={4}
             style={{ minHeight: 100, textAlignVertical: "top" }}

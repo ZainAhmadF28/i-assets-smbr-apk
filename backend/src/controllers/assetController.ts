@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import QRCode from "qrcode";
 import prisma from "../lib/prisma";
 
-type Kategori = "BANGUNAN" | "KENDARAAN_DINAS" | "PERLENGKAPAN" | "TANAH";
-type Kondisi = "BAIK" | "RUSAK" | "RUSAK_BERAT" | "HILANG";
+// Enum 'Kategori' was removed from the schema, but we still use 'Kondisi'
+type Kondisi = "BAIK" | "RUSAK" | "RUSAK_BERAT" | "HILANG" | "BELUM_DICEK";
 
 // ── GET /api/assets/stats ────────────────────────────────────────────────────
 export async function getAssetStats(_req: Request, res: Response): Promise<void> {
@@ -33,7 +33,7 @@ export async function getAssets(req: Request, res: Response): Promise<void> {
 
   const whereFilter: {
     OR?: { namaAset?: { contains: string; mode: "insensitive" }; nomorAset?: { contains: string; mode: "insensitive" } }[];
-    kategori?: Kategori;
+    kelasAsetSig?: string;
     kondisi?: Kondisi;
   } = {};
 
@@ -44,11 +44,12 @@ export async function getAssets(req: Request, res: Response): Promise<void> {
     ];
   }
 
-  if (kategori && ["BANGUNAN", "KENDARAAN_DINAS", "PERLENGKAPAN", "TANAH"].includes(kategori)) {
-    whereFilter.kategori = kategori as Kategori;
+  // Filter based on the standardized SIG grouping
+  if (kategori) {
+    whereFilter.kelasAsetSig = kategori;
   }
 
-  if (kondisi && ["BAIK", "RUSAK", "RUSAK_BERAT", "HILANG"].includes(kondisi)) {
+  if (kondisi && ["BAIK", "RUSAK", "RUSAK_BERAT", "HILANG", "BELUM_DICEK"].includes(kondisi)) {
     whereFilter.kondisi = kondisi as Kondisi;
   }
 
@@ -63,7 +64,7 @@ export async function getAssets(req: Request, res: Response): Promise<void> {
 // ── GET /api/assets/:id ──────────────────────────────────────────────────────
 export async function getAssetById(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
-  const asset = await prisma.asset.findUnique({ where: { id } });
+  const asset = await prisma.asset.findUnique({ where: { id: String(id) } });
 
   if (!asset) {
     res.status(404).json({ message: "Aset tidak ditemukan." });
@@ -76,12 +77,12 @@ export async function getAssetById(req: Request, res: Response): Promise<void> {
 // ── POST /api/assets ─────────────────────────────────────────────────────────
 export async function createAsset(req: Request, res: Response): Promise<void> {
   const {
-    nomorAset, namaAset, kategori, quantity, satuanUnit,
-    latitude, longitude, namaLokasi, kondisi, report,
+    nomorAset, namaAset, kodeKelas, kelasAsetSmbr, kelasAsetSig,
+    site, qty, satuan, latitude, longitude, kondisi, keterangan,
   } = req.body as Record<string, string | number | null>;
 
-  if (!nomorAset || !namaAset || !kategori) {
-    res.status(400).json({ message: "nomorAset, namaAset, dan kategori wajib diisi." });
+  if (!nomorAset || !namaAset) {
+    res.status(400).json({ message: "nomorAset dan namaAset wajib diisi." });
     return;
   }
 
@@ -95,24 +96,24 @@ export async function createAsset(req: Request, res: Response): Promise<void> {
     data: {
       nomorAset: String(nomorAset),
       namaAset: String(namaAset),
-      kategori: kategori as "BANGUNAN" | "KENDARAAN_DINAS" | "PERLENGKAPAN" | "TANAH",
-      quantity: quantity ? Number(quantity) : 1,
-      satuanUnit: satuanUnit ? String(satuanUnit) : "Unit",
+      kodeKelas: kodeKelas ? String(kodeKelas) : null,
+      kelasAsetSmbr: kelasAsetSmbr ? String(kelasAsetSmbr) : null,
+      kelasAsetSig: kelasAsetSig ? String(kelasAsetSig) : null,
+      site: site ? String(site) : null,
+      qty: qty ? Number(qty) : 1,
+      satuan: satuan ? String(satuan) : "PC",
       latitude: latitude != null ? Number(latitude) : null,
       longitude: longitude != null ? Number(longitude) : null,
-      namaLokasi: namaLokasi ? String(namaLokasi) : null,
-      kondisi: (kondisi as "BAIK" | "RUSAK" | "RUSAK_BERAT" | "HILANG") ?? "BAIK",
-      report: report ? String(report) : null,
+      kondisi: (kondisi as Kondisi) || "BELUM_DICEK",
+      keterangan: keterangan ? String(keterangan) : null,
     },
   });
 
-  await prisma.activityLog.create({
+  await prisma.assetLog.create({
     data: {
       action: "CREATED",
       assetId: asset.id,
-      assetName: asset.namaAset,
-      assetNomor: asset.nomorAset,
-      details: `Aset baru ditambahkan — kategori ${asset.kategori}, kondisi ${asset.kondisi}`,
+      catatan: `Aset baru ditambahkan — kelas SIG ${asset.kelasAsetSig}, kondisi ${asset.kondisi}`,
     },
   });
 
@@ -123,11 +124,11 @@ export async function createAsset(req: Request, res: Response): Promise<void> {
 export async function updateAsset(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
   const {
-    nomorAset, namaAset, kategori, quantity, satuanUnit,
-    latitude, longitude, namaLokasi, kondisi, report,
+    nomorAset, namaAset, kodeKelas, kelasAsetSmbr, kelasAsetSig,
+    site, qty, satuan, latitude, longitude, kondisi, keterangan,
   } = req.body as Record<string, string | number | null | undefined>;
 
-  const existing = await prisma.asset.findUnique({ where: { id } });
+  const existing = await prisma.asset.findUnique({ where: { id: String(id) } });
   if (!existing) {
     res.status(404).json({ message: "Aset tidak ditemukan." });
     return;
@@ -143,28 +144,28 @@ export async function updateAsset(req: Request, res: Response): Promise<void> {
   }
 
   const asset = await prisma.asset.update({
-    where: { id },
+    where: { id: String(id) },
     data: {
       ...(nomorAset != null && { nomorAset: String(nomorAset) }),
       ...(namaAset != null && { namaAset: String(namaAset) }),
-      ...(kategori != null && { kategori: kategori as "BANGUNAN" | "KENDARAAN_DINAS" | "PERLENGKAPAN" | "TANAH" }),
-      ...(quantity != null && { quantity: Number(quantity) }),
-      ...(satuanUnit != null && { satuanUnit: String(satuanUnit) }),
+      kodeKelas: kodeKelas !== undefined ? (kodeKelas != null ? String(kodeKelas) : null) : undefined,
+      kelasAsetSmbr: kelasAsetSmbr !== undefined ? (kelasAsetSmbr != null ? String(kelasAsetSmbr) : null) : undefined,
+      kelasAsetSig: kelasAsetSig !== undefined ? (kelasAsetSig != null ? String(kelasAsetSig) : null) : undefined,
+      site: site !== undefined ? (site != null ? String(site) : null) : undefined,
+      ...(qty != null && { qty: Number(qty) }),
+      ...(satuan != null && { satuan: String(satuan) }),
       latitude: latitude !== undefined ? (latitude != null ? Number(latitude) : null) : undefined,
       longitude: longitude !== undefined ? (longitude != null ? Number(longitude) : null) : undefined,
-      namaLokasi: namaLokasi !== undefined ? (namaLokasi != null ? String(namaLokasi) : null) : undefined,
-      ...(kondisi != null && { kondisi: kondisi as "BAIK" | "RUSAK" | "RUSAK_BERAT" | "HILANG" }),
-      report: report !== undefined ? (report != null ? String(report) : null) : undefined,
+      ...(kondisi != null && { kondisi: kondisi as Kondisi }),
+      keterangan: keterangan !== undefined ? (keterangan != null ? String(keterangan) : null) : undefined,
     },
   });
 
-  await prisma.activityLog.create({
+  await prisma.assetLog.create({
     data: {
-      action: "UPDATED",
       assetId: asset.id,
-      assetName: asset.namaAset,
-      assetNomor: asset.nomorAset,
-      details: "Data aset diperbarui",
+      action: "UPDATED",
+      catatan: "Data aset diperbarui",
     },
   });
 
@@ -175,23 +176,17 @@ export async function updateAsset(req: Request, res: Response): Promise<void> {
 export async function deleteAsset(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
 
-  const existing = await prisma.asset.findUnique({ where: { id } });
+  const existing = await prisma.asset.findUnique({ where: { id: String(id) } });
   if (!existing) {
     res.status(404).json({ message: "Aset tidak ditemukan." });
     return;
   }
 
-  await prisma.asset.delete({ where: { id } });
+  await prisma.asset.delete({ where: { id: String(id) } });
 
-  await prisma.activityLog.create({
-    data: {
-      action: "DELETED",
-      assetId: null,
-      assetName: existing.namaAset,
-      assetNomor: existing.nomorAset,
-      details: "Aset dihapus dari sistem",
-    },
-  });
+  // Peringatan: Karena onDelete Cascade, kita tidak bisa menyimpan assetLog 
+  // yang merujuk ke assetId yang sudah dihapus tanpa mengubah schema prisma.
+  // Untuk saat ini, kita lewatkan logging DELETE ke assetLog jika asset terhapus.
 
   res.status(204).send();
 }
@@ -200,7 +195,7 @@ export async function deleteAsset(req: Request, res: Response): Promise<void> {
 export async function uploadPhoto(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
 
-  const existing = await prisma.asset.findUnique({ where: { id } });
+  const existing = await prisma.asset.findUnique({ where: { id: String(id) } });
   if (!existing) {
     res.status(404).json({ message: "Aset tidak ditemukan." });
     return;
@@ -212,23 +207,20 @@ export async function uploadPhoto(req: Request, res: Response): Promise<void> {
   }
 
   // Path yang disimpan di DB — relatif dari server (di-serve sebagai static)
-  const gambar = `/uploads/${req.file.filename}`;
+  const fotoUrl = `/uploads/${req.file.filename}`;
 
   const asset = await prisma.asset.update({
-    where: { id },
+    where: { id: String(id) },
     data: {
-      gambar,
-      fotoTimestamp: new Date(),
+      fotoUrl,
     },
   });
 
-  await prisma.activityLog.create({
+  await prisma.assetLog.create({
     data: {
       action: "PHOTO_UPLOADED",
       assetId: asset.id,
-      assetName: asset.namaAset,
-      assetNomor: asset.nomorAset,
-      details: "Foto aset diperbarui",
+      catatan: "Foto aset diperbarui",
     },
   });
 
@@ -239,7 +231,7 @@ export async function uploadPhoto(req: Request, res: Response): Promise<void> {
 export async function getQrCode(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
 
-  const existing = await prisma.asset.findUnique({ where: { id }, select: { id: true } });
+  const existing = await prisma.asset.findUnique({ where: { id: String(id) }, select: { id: true } });
   if (!existing) {
     res.status(404).json({ message: "Aset tidak ditemukan." });
     return;

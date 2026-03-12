@@ -1,6 +1,3 @@
-// I-Asset SMBR — Prisma Schema
-// Docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,15 +7,56 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ADMIN
+model User {
+  id         String   @id @default(uuid())
+  name       String
+  email      String   @unique
+  password   String
+  role       String   @default("admin")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  logs       AssetLog[]
+
+  @@map("users")
 }
 
-enum Kategori {
-  BANGUNAN
-  KENDARAAN_DINAS
-  PERLENGKAPAN
-  TANAH
+model Asset {
+  id             String    @id @default(uuid())
+
+  // Kolom 1-8 dari Excel (data SAP)
+  kodeKelas      String?   @map("kode_kelas")
+  kelasAsetSmbr  String?   @map("kelas_aset_smbr")
+  kelasAsetSig   String?   @map("kelas_aset_sig")
+  nomorAset      String    @unique @map("nomor_aset")
+  namaAset       String    @map("nama_aset")
+  site           String?
+  qty            Int       @default(1)
+  satuan         String?   @default("PC")
+
+  // Kolom 9: KOORDINAT
+  latitude       Float?
+  longitude      Float?
+
+  // Kolom 10: TANGGAL UPDATE
+  tanggalUpdate  DateTime? @map("tanggal_update")
+
+  // Kolom 11: DOKUMENTASI
+  fotoUrl        String?   @map("foto_url")
+
+  // Kolom 12: KONDISI
+  kondisi        Kondisi   @default(BELUM_DICEK)
+
+  // Kolom 13: KETERANGAN
+  keterangan     String?
+
+  // Kolom 14: QR CODE ASET
+  qrCodeUrl      String?   @map("qr_code_url")
+
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  logs           AssetLog[]
+
+  @@map("assets")
 }
 
 enum Kondisi {
@@ -26,54 +64,21 @@ enum Kondisi {
   RUSAK
   RUSAK_BERAT
   HILANG
+  BELUM_DICEK
 }
 
-model User {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  password  String
-  role      Role     @default(ADMIN)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+model AssetLog {
+  id        String   @id @default(uuid())
+  assetId   String   @map("asset_id")
+  userId    String?  @map("user_id")
+  action    String
+  oldValue  String?  @map("old_value")
+  newValue  String?  @map("new_value")
+  catatan   String?
+  createdAt DateTime @default(now()) @map("created_at")
 
-model Asset {
-  id            String    @id @default(cuid())
-  nomorAset     String    @unique
-  namaAset      String
-  kategori      Kategori
-  quantity      Int       @default(1)
-  satuanUnit    String    @default("Unit")
-  gambar        String?
-  fotoTimestamp DateTime?
-  latitude      Float?
-  longitude     Float?
-  namaLokasi    String?
-  kondisi       Kondisi   @default(BAIK)
-  report        String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  @@index([nomorAset])
-  @@index([kategori])
-  @@index([kondisi])
-}
-
-enum ActivityAction {
-  CREATED
-  UPDATED
-  DELETED
-  PHOTO_UPLOADED
-}
-
-model ActivityLog {
-  id         String         @id @default(cuid())
-  action     ActivityAction
-  assetId    String?
-  assetName  String
-  assetNomor String
-  details    String?
-  createdAt  DateTime       @default(now())
-
-  @@index([createdAt])
+  @@map("asset_logs")
 }

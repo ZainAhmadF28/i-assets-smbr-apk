@@ -1,31 +1,33 @@
 // Tipe data utama untuk I-Asset SMBR
 
-export type Kategori = "BANGUNAN" | "KENDARAAN_DINAS" | "PERLENGKAPAN" | "TANAH";
-export type Kondisi = "BAIK" | "RUSAK" | "RUSAK_BERAT" | "HILANG";
-export type Role = "ADMIN";
+export type Kondisi = "BAIK" | "RUSAK" | "RUSAK_BERAT" | "HILANG" | "BELUM_DICEK";
 
 export interface Asset {
   id: string;
+  kodeKelas: string | null;
+  kelasAsetSmbr: string | null;
+  kelasAsetSig: string | null;
   nomorAset: string;
   namaAset: string;
-  kategori: Kategori;
-  quantity: number;
-  satuanUnit: string;
-  gambar: string | null;
-  fotoTimestamp: string | null; // ISO datetime string
+  site: string | null;
+  qty: number;
+  satuan: string | null;
   latitude: number | null;
   longitude: number | null;
-  namaLokasi: string | null;
+  tanggalUpdate: string | null;
+  fotoUrl: string | null;
   kondisi: Kondisi;
-  report: string | null;
+  keterangan: string | null;
+  qrCodeUrl: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface User {
   id: string;
-  username: string;
-  role: Role;
+  name: string;
+  email: string;
+  role: string;
 }
 
 export interface AuthResponse {
@@ -47,29 +49,24 @@ export interface AssetListResponse {
 
 export interface AssetFilterParams {
   search?: string;
-  kategori?: Kategori | "";
+  kategori?: string;
   kondisi?: Kondisi | "";
   page?: number;
   limit?: number;
 }
-
-export const KATEGORI_LABEL: Record<Kategori, string> = {
-  BANGUNAN: "Bangunan",
-  KENDARAAN_DINAS: "Kendaraan Dinas",
-  PERLENGKAPAN: "Perlengkapan",
-  TANAH: "Tanah",
-};
 
 export const KONDISI_LABEL: Record<Kondisi, string> = {
   BAIK: "Baik",
   RUSAK: "Rusak",
   RUSAK_BERAT: "Rusak Berat",
   HILANG: "Hilang",
+  BELUM_DICEK: "Belum Dicek",
 };
 
 export const KONDISI_COLOR: Record<Kondisi, string> = {
   BAIK: "#16a34a",
   RUSAK: "#d97706",
   RUSAK_BERAT: "#dc2626",
-  HILANG: "#64748b", // slate gray for missing
+  HILANG: "#64748b",
+  BELUM_DICEK: "#94a3b8", // slate-400
 };

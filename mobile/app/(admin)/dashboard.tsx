@@ -16,8 +16,7 @@ import { useRouter, useFocusEffect } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { assetService } from "@services/assetService";
 import { authService } from "@services/authService";
-import type { Asset, Kategori } from "@shared-types/index";
-import { KATEGORI_LABEL } from "@shared-types/index";
+import type { Asset } from "@shared-types/index";
 import KondisiBadge from "@components/ui/KondisiBadge";
 
 type FeatherIconName = React.ComponentProps<typeof Feather>["name"];
@@ -25,19 +24,21 @@ type FeatherIconName = React.ComponentProps<typeof Feather>["name"];
 const { width: SCREEN_W } = Dimensions.get("window");
 const CARD_W = (SCREEN_W - 48) / 2;
 
-const KATEGORI_OPTIONS: Array<{ label: string; value: Kategori | "" }> = [
+const KATEGORI_OPTIONS: Array<{ label: string; value: string }> = [
   { label: "Semua", value: "" },
   { label: "Bangunan", value: "BANGUNAN" },
-  { label: "Kendaraan", value: "KENDARAAN_DINAS" },
+  { label: "Infrastruktur", value: "INFRASTRUKTUR" },
+  { label: "Kendaraan & Alat Berat", value: "KENDARAAN & ALAT BERAT" },
   { label: "Perlengkapan", value: "PERLENGKAPAN" },
   { label: "Tanah", value: "TANAH" },
 ];
 
 const KATEGORI_ICON: Record<string, FeatherIconName> = {
-  BANGUNAN: "home",
-  KENDARAAN_DINAS: "truck",
-  PERLENGKAPAN: "tool",
-  TANAH: "map",
+  "BANGUNAN": "home",
+  "INFRASTRUKTUR": "settings",
+  "KENDARAAN & ALAT BERAT": "truck",
+  "PERLENGKAPAN": "tool",
+  "TANAH": "map",
 };
 
 export default function DashboardScreen() {
@@ -47,7 +48,7 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
-  const [filterKategori, setFilterKategori] = useState<Kategori | "">("");
+  const [filterKategori, setFilterKategori] = useState<string>("");
 
   useFocusEffect(
     useCallback(() => {
@@ -90,8 +91,8 @@ export default function DashboardScreen() {
 
   function renderAssetCard({ item, index }: { item: Asset; index: number }) {
     const catColor = "#135d3a";
-    const catIcon = KATEGORI_ICON[item.kategori] ?? "box";
-    const photoUrl = assetService.getPhotoUrl(item.gambar);
+    const catIcon = item.kelasAsetSig ? (KATEGORI_ICON[item.kelasAsetSig] ?? "box") : "box";
+    const photoUrl = assetService.getPhotoUrl(item.fotoUrl);
     const isLeft = index % 2 === 0;
     return (
       <TouchableOpacity
@@ -155,7 +156,7 @@ export default function DashboardScreen() {
               borderRadius: 6,
               overflow: "hidden",
             }}>
-              {KATEGORI_LABEL[item.kategori]}
+              {item.kelasAsetSig || "Aset"}
             </Text>
             <KondisiBadge kondisi={item.kondisi} />
           </View>

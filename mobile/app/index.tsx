@@ -24,9 +24,9 @@ type AssetUpdate = {
   id: string;
   namaAset: string;
   nomorAset: string;
-  kategori: string;
+  kelasAsetSig: string | null;
   kondisi: string;
-  gambar: string | null;
+  fotoUrl: string | null;
   updatedAt: string;
 };
 
@@ -35,11 +35,12 @@ type AssetStats = {
   kondisi: { BAIK: number; RUSAK: number; RUSAK_BERAT: number; HILANG: number };
 } | null;
 
-const KATEGORI_COLOR: Record<string, string> = {
+const KELAS_ASET_COLOR: Record<string, string> = {
   BANGUNAN: "#0ea5e9",
-  KENDARAAN_DINAS: "#f59e0b",
-  PERLENGKAPAN: "#8b5cf6",
-  TANAH: "#10b981",
+  INFRASTRUKTUR: "#f59e0b",
+  "KENDARAAN & ALAT BERAT": "#8b5cf6",
+  PERLENGKAPAN: "#10b981",
+  TANAH: "#ec4899",
 };
 
 const KONDISI_COLOR: Record<string, string> = {
@@ -300,9 +301,9 @@ export default function HomePage() {
                     }}
                   >
                     {/* Thumbnail */}
-                    {item.gambar ? (
+                    {item.fotoUrl ? (
                       <Image
-                        source={{ uri: `${API_BASE_URL}${item.gambar}` }}
+                        source={{ uri: `${API_BASE_URL}${item.fotoUrl}` }}
                         style={{
                           width: 44,
                           height: 44,
@@ -671,9 +672,9 @@ export default function HomePage() {
                       elevation: 4,
                     }}
                   >
-                    {item.gambar ? (
+                    {item.fotoUrl ? (
                       <Image
-                        source={{ uri: `${API_BASE_URL}${item.gambar}` }}
+                        source={{ uri: `${API_BASE_URL}${item.fotoUrl}` }}
                         style={{ width: "100%", height: 140 }}
                         resizeMode="cover"
                       />
@@ -694,7 +695,7 @@ export default function HomePage() {
                       <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
                         <View
                           style={{
-                            backgroundColor: (KATEGORI_COLOR[item.kategori] ?? "#135d3a") + "22",
+                            backgroundColor: (item.kelasAsetSig ? KELAS_ASET_COLOR[item.kelasAsetSig] : "#135d3a") + "22",
                             borderRadius: 6,
                             paddingHorizontal: 8,
                             paddingVertical: 2,
@@ -703,12 +704,12 @@ export default function HomePage() {
                         >
                           <Text
                             style={{
-                              color: KATEGORI_COLOR[item.kategori] ?? "#135d3a",
+                              color: item.kelasAsetSig ? KELAS_ASET_COLOR[item.kelasAsetSig] : "#135d3a",
                               fontSize: 10,
                               fontWeight: "700",
                             }}
                           >
-                            {item.kategori.replace("_", " ")}
+                            {item.kelasAsetSig || "Aset"}
                           </Text>
                         </View>
                         <View
