@@ -66,6 +66,7 @@ export default function DashboardScreen() {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [showFilter, setShowFilter] = useState(false);
+  const [viewMode, setViewMode] = useState<"card" | "list">("list");
 
   const PAGE_SIZE = 50;
   const activeFilterCount = (filterKategori ? 1 : 0) + (filterKondisi ? 1 : 0);
@@ -224,6 +225,73 @@ export default function DashboardScreen() {
     );
   }
 
+  function renderAssetRow({ item }: { item: Asset }) {
+    const catColor = "#135d3a";
+    const catIcon = item.kelasAsetSig ? (KATEGORI_ICON[item.kelasAsetSig] ?? "box") : "box";
+    const photoUrl = assetService.getPhotoUrl(item.fotoUrl);
+    return (
+      <TouchableOpacity
+        onPress={() => router.push(`/(admin)/asset/${item.id}`)}
+        activeOpacity={0.82}
+        style={{
+          flexDirection: "row",
+          backgroundColor: "white",
+          borderRadius: 16,
+          marginHorizontal: 16,
+          marginBottom: 10,
+          padding: 12,
+          alignItems: "center",
+          borderWidth: 1,
+          borderColor: "#f1f5f9",
+          shadowColor: "#94a3b8",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 6,
+          elevation: 2,
+        }}
+      >
+        {/* Thumbnail */}
+        {photoUrl ? (
+          <Image
+            source={{ uri: photoUrl }}
+            style={{ width: 56, height: 56, borderRadius: 12 }}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={{
+            width: 56, height: 56, borderRadius: 12,
+            backgroundColor: catColor + "18",
+            alignItems: "center", justifyContent: "center",
+          }}>
+            <Feather name={catIcon} size={22} color={catColor} />
+          </View>
+        )}
+
+        {/* Info */}
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text style={{ color: "#1e293b", fontWeight: "700", fontSize: 13 }} numberOfLines={1}>
+            {item.namaAset}
+          </Text>
+          <Text style={{ color: "#94a3b8", fontSize: 10, marginTop: 2 }} numberOfLines={1}>
+            #{item.nomorAset}
+          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 6 }}>
+            <Text style={{
+              color: catColor, fontSize: 9, fontWeight: "700",
+              backgroundColor: catColor + "18",
+              paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, overflow: "hidden",
+            }}>
+              {item.kelasAsetSig || "Aset"}
+            </Text>
+            <KondisiBadge kondisi={item.kondisi} />
+          </View>
+        </View>
+
+        <Feather name="chevron-right" size={16} color="#cbd5e1" />
+      </TouchableOpacity>
+    );
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: "#f8fafc" }}>
       {/* Header */}
@@ -261,9 +329,31 @@ export default function DashboardScreen() {
           <Text style={{ color: "white", fontSize: 20, fontWeight: "800", flex: 1 }}>
             Aset
           </Text>
-          <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: "600" }}>
-            {total} item
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: "600", marginRight: 4 }}>
+              {total} item
+            </Text>
+            <TouchableOpacity
+              onPress={() => setViewMode("card")}
+              style={{
+                width: 32, height: 32, borderRadius: 8,
+                backgroundColor: viewMode === "card" ? "white" : "rgba(255,255,255,0.15)",
+                alignItems: "center", justifyContent: "center",
+              }}
+            >
+              <Feather name="grid" size={15} color={viewMode === "card" ? "#135d3a" : "rgba(255,255,255,0.6)"} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setViewMode("list")}
+              style={{
+                width: 32, height: 32, borderRadius: 8,
+                backgroundColor: viewMode === "list" ? "white" : "rgba(255,255,255,0.15)",
+                alignItems: "center", justifyContent: "center",
+              }}
+            >
+              <Feather name="list" size={15} color={viewMode === "list" ? "#135d3a" : "rgba(255,255,255,0.6)"} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Search bar + Filter button */}
@@ -448,10 +538,11 @@ export default function DashboardScreen() {
         </View>
       ) : (
         <FlatList
+          key={viewMode}
           data={assets}
           keyExtractor={(item) => item.id}
-          numColumns={2}
-          renderItem={renderAssetCard}
+          numColumns={viewMode === "card" ? 2 : 1}
+          renderItem={viewMode === "card" ? renderAssetCard : renderAssetRow}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
