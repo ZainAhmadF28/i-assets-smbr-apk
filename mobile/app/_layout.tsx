@@ -11,6 +11,7 @@ import {
   Dimensions,
 } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { NotificationProvider } from "../context/NotificationContext";
 
 // Prevent the native splash from auto-hiding
@@ -119,22 +120,26 @@ export default function RootLayout() {
   }
 
   return (
-    <NotificationProvider>
-      <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: "#135d3a" },
-          headerTintColor: "#ffffff",
-          headerTitleStyle: { fontWeight: "bold" },
-          contentStyle: { backgroundColor: "#f3f4f6" },
-        }}
-      >
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)/login" options={{ title: "Login Admin", headerShown: false }} />
-        <Stack.Screen name="(guest)" options={{ headerShown: false }} />
-        <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-      </Stack>
-    </NotificationProvider>
+    <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
+      <SafeAreaProvider>
+        <NotificationProvider>
+          <StatusBar style="light" />
+          <Stack
+            screenOptions={{
+              headerStyle: { backgroundColor: "#135d3a" },
+              headerTintColor: "#ffffff",
+              headerTitleStyle: { fontWeight: "bold" },
+              contentStyle: { backgroundColor: "#f3f4f6" },
+            }}
+          >
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)/login" options={{ title: "Login Admin", headerShown: false }} />
+            <Stack.Screen name="(guest)" options={{ headerShown: false }} />
+            <Stack.Screen name="(admin)" options={{ headerShown: false }} />
+          </Stack>
+        </NotificationProvider>
+      </SafeAreaProvider>
+    </SafeAreaView>
   );
 }
 

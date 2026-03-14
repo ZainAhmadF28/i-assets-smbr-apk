@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, memo } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import {
   Modal,
   ScrollView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { assetService } from "@services/assetService";
@@ -149,156 +150,17 @@ export default function DashboardScreen() {
     ]);
   }
 
-  function renderAssetCard({ item, index }: { item: Asset; index: number }) {
-    const catColor = "#135d3a";
-    const catIcon = item.kelasAsetSig ? (KATEGORI_ICON[item.kelasAsetSig] ?? "box") : "box";
-    const photoUrl = assetService.getPhotoUrl(item.fotoUrl);
-    const isLeft = index % 2 === 0;
-    return (
-      <TouchableOpacity
-        onPress={() => router.push(`/(admin)/asset/${item.id}`)}
-        activeOpacity={0.82}
-        style={{
-          width: CARD_W,
-          backgroundColor: "white",
-          borderRadius: 20,
-          marginLeft: isLeft ? 16 : 8,
-          marginRight: isLeft ? 8 : 16,
-          marginBottom: 16,
-          borderWidth: 1,
-          borderColor: "#f1f5f9",
-          shadowColor: "#94a3b8",
-          shadowOffset: { width: 0, height: 3 },
-          shadowOpacity: 0.12,
-          shadowRadius: 8,
-          elevation: 3,
-          overflow: "hidden",
-        }}
-      >
-        {/* Thumbnail */}
-        {photoUrl ? (
-          <Image
-            source={{ uri: photoUrl }}
-            style={{ width: "100%", height: CARD_W * 0.72 }}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={{
-            width: "100%",
-            height: CARD_W * 0.72,
-            backgroundColor: catColor + "18",
-            alignItems: "center",
-            justifyContent: "center",
-          }}>
-            <Feather name={catIcon} size={32} color={catColor} />
-          </View>
-        )}
-
-        {/* Info */}
-        <View style={{ padding: 12 }}>
-          <Text
-            style={{ color: "#1e293b", fontWeight: "700", fontSize: 13, lineHeight: 18, marginBottom: 4 }}
-            numberOfLines={2}
-          >
-            {item.namaAset}
-          </Text>
-          <Text style={{ color: "#94a3b8", fontSize: 10, marginBottom: 8 }} numberOfLines={1}>
-            #{item.nomorAset}
-          </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
-            <Text style={{
-              color: catColor,
-              fontSize: 9,
-              fontWeight: "700",
-              backgroundColor: catColor + "18",
-              paddingHorizontal: 7,
-              paddingVertical: 2,
-              borderRadius: 6,
-              overflow: "hidden",
-            }}>
-              {item.kelasAsetSig || "Aset"}
-            </Text>
-          </View>
-          <KondisiBadge kondisi={item.kondisi} />
-        </View>
-      </TouchableOpacity>
-    );
-  }
-
-  function renderAssetRow({ item }: { item: Asset }) {
-    const catColor = "#135d3a";
-    const catIcon = item.kelasAsetSig ? (KATEGORI_ICON[item.kelasAsetSig] ?? "box") : "box";
-    const photoUrl = assetService.getPhotoUrl(item.fotoUrl);
-    return (
-      <TouchableOpacity
-        onPress={() => router.push(`/(admin)/asset/${item.id}`)}
-        activeOpacity={0.82}
-        style={{
-          flexDirection: "row",
-          backgroundColor: "white",
-          borderRadius: 16,
-          marginHorizontal: 16,
-          marginBottom: 10,
-          padding: 12,
-          alignItems: "center",
-          borderWidth: 1,
-          borderColor: "#f1f5f9",
-          shadowColor: "#94a3b8",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.08,
-          shadowRadius: 6,
-          elevation: 2,
-        }}
-      >
-        {/* Thumbnail */}
-        {photoUrl ? (
-          <Image
-            source={{ uri: photoUrl }}
-            style={{ width: 56, height: 56, borderRadius: 12 }}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={{
-            width: 56, height: 56, borderRadius: 12,
-            backgroundColor: catColor + "18",
-            alignItems: "center", justifyContent: "center",
-          }}>
-            <Feather name={catIcon} size={22} color={catColor} />
-          </View>
-        )}
-
-        {/* Info */}
-        <View style={{ flex: 1, marginLeft: 12 }}>
-          <Text style={{ color: "#1e293b", fontWeight: "700", fontSize: 13 }} numberOfLines={1}>
-            {item.namaAset}
-          </Text>
-          <Text style={{ color: "#94a3b8", fontSize: 10, marginTop: 2 }} numberOfLines={1}>
-            #{item.nomorAset}
-          </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 6 }}>
-            <Text style={{
-              color: catColor, fontSize: 9, fontWeight: "700",
-              backgroundColor: catColor + "18",
-              paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, overflow: "hidden",
-            }}>
-              {item.kelasAsetSig || "Aset"}
-            </Text>
-            <KondisiBadge kondisi={item.kondisi} />
-          </View>
-        </View>
-
-        <Feather name="chevron-right" size={16} color="#cbd5e1" />
-      </TouchableOpacity>
-    );
-  }
+  const handlePressAsset = useCallback((id: string) => {
+    router.push(`/(admin)/asset/${id}`);
+  }, [router]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f8fafc" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f8fafc" }} edges={['top', 'bottom']}>
       {/* Header */}
       <View
         style={{
           backgroundColor: "#135d3a",
-          paddingTop: Platform.OS === "ios" ? 50 : 32,
+          paddingTop: 12,
           paddingBottom: 14,
           paddingHorizontal: 16,
           borderBottomLeftRadius: 24,
@@ -542,7 +404,25 @@ export default function DashboardScreen() {
           data={assets}
           keyExtractor={(item) => item.id}
           numColumns={viewMode === "card" ? 2 : 1}
-          renderItem={viewMode === "card" ? renderAssetCard : renderAssetRow}
+          renderItem={({ item, index }) => 
+            viewMode === "card" ? (
+              <MemoizedAssetCard item={item} index={index} onPress={handlePressAsset} />
+            ) : (
+              <MemoizedAssetRow item={item} onPress={handlePressAsset} />
+            )
+          }
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          removeClippedSubviews={Platform.OS === "android"}
+          getItemLayout={(data, index) => {
+            if (viewMode === "card") {
+              const height = CARD_W * 0.72 + 100;
+              return { length: height, offset: height * Math.floor(index / 2), index };
+            }
+            // List mode
+            return { length: 80, offset: 80 * index, index };
+          }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -613,6 +493,150 @@ export default function DashboardScreen() {
           <Feather name="plus" size={24} color="white" />
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
+
+const MemoizedAssetCard = memo(function AssetCard({ item, index, onPress }: { item: Asset; index: number, onPress: (id: string) => void }) {
+  const catColor = "#135d3a";
+  const catIcon = item.kelasAsetSig ? (KATEGORI_ICON[item.kelasAsetSig] ?? "box") : "box";
+  const photoUrl = assetService.getPhotoUrl(item.fotoUrl);
+  const isLeft = index % 2 === 0;
+  
+  return (
+    <TouchableOpacity
+      onPress={() => onPress(item.id)}
+      activeOpacity={0.82}
+      style={{
+        width: CARD_W,
+        backgroundColor: "white",
+        borderRadius: 20,
+        marginLeft: isLeft ? 16 : 8,
+        marginRight: isLeft ? 8 : 16,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: "#f1f5f9",
+        shadowColor: "#94a3b8",
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        elevation: 3,
+        overflow: "hidden",
+      }}
+    >
+      {/* Thumbnail */}
+      {photoUrl ? (
+        <Image
+          source={{ uri: photoUrl }}
+          style={{ width: "100%", height: CARD_W * 0.72 }}
+          resizeMode="cover"
+        />
+      ) : (
+        <View style={{
+          width: "100%",
+          height: CARD_W * 0.72,
+          backgroundColor: catColor + "18",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          <Feather name={catIcon} size={32} color={catColor} />
+        </View>
+      )}
+
+      {/* Info */}
+      <View style={{ padding: 12 }}>
+        <Text
+          style={{ color: "#1e293b", fontWeight: "700", fontSize: 13, lineHeight: 18, marginBottom: 4 }}
+          numberOfLines={2}
+        >
+          {item.namaAset}
+        </Text>
+        <Text style={{ color: "#94a3b8", fontSize: 10, marginBottom: 8 }} numberOfLines={1}>
+          #{item.nomorAset}
+        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
+          <Text style={{
+            color: catColor,
+            fontSize: 9,
+            fontWeight: "700",
+            backgroundColor: catColor + "18",
+            paddingHorizontal: 7,
+            paddingVertical: 2,
+            borderRadius: 6,
+            overflow: "hidden",
+          }}>
+            {item.kelasAsetSig || "Aset"}
+          </Text>
+        </View>
+        <KondisiBadge kondisi={item.kondisi} />
+      </View>
+    </TouchableOpacity>
+  );
+});
+
+const MemoizedAssetRow = memo(function AssetRow({ item, onPress }: { item: Asset, onPress: (id: string) => void }) {
+  const catColor = "#135d3a";
+  const catIcon = item.kelasAsetSig ? (KATEGORI_ICON[item.kelasAsetSig] ?? "box") : "box";
+  const photoUrl = assetService.getPhotoUrl(item.fotoUrl);
+  return (
+    <TouchableOpacity
+      onPress={() => onPress(item.id)}
+      activeOpacity={0.82}
+      style={{
+        flexDirection: "row",
+        backgroundColor: "white",
+        borderRadius: 16,
+        marginHorizontal: 16,
+        marginBottom: 10,
+        padding: 12,
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: "#f1f5f9",
+        shadowColor: "#94a3b8",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
+        elevation: 2,
+      }}
+    >
+      {/* Thumbnail */}
+      {photoUrl ? (
+        <Image
+          source={{ uri: photoUrl }}
+          style={{ width: 56, height: 56, borderRadius: 12 }}
+          resizeMode="cover"
+        />
+      ) : (
+        <View style={{
+          width: 56, height: 56, borderRadius: 12,
+          backgroundColor: catColor + "18",
+          alignItems: "center", justifyContent: "center",
+        }}>
+          <Feather name={catIcon} size={22} color={catColor} />
+        </View>
+      )}
+
+      {/* Info */}
+      <View style={{ flex: 1, marginLeft: 12 }}>
+        <Text style={{ color: "#1e293b", fontWeight: "700", fontSize: 13 }} numberOfLines={1}>
+          {item.namaAset}
+        </Text>
+        <Text style={{ color: "#94a3b8", fontSize: 10, marginTop: 2 }} numberOfLines={1}>
+          #{item.nomorAset}
+        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 6 }}>
+          <Text style={{
+            color: catColor, fontSize: 9, fontWeight: "700",
+            backgroundColor: catColor + "18",
+            paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, overflow: "hidden",
+          }}>
+            {item.kelasAsetSig || "Aset"}
+          </Text>
+          <KondisiBadge kondisi={item.kondisi} />
+        </View>
+      </View>
+
+      <Feather name="chevron-right" size={16} color="#cbd5e1" />
+    </TouchableOpacity>
+  );
+});
