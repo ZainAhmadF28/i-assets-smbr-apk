@@ -14,6 +14,7 @@ import {
 import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { Feather } from "@expo/vector-icons";
+import ImageViewing from "react-native-image-viewing";
 import { assetService } from "@services/assetService";
 import type { Asset } from "@shared-types/index";
 import KondisiBadge from "@components/ui/KondisiBadge";
@@ -29,6 +30,7 @@ export default function AdminAssetDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [isImageViewVisible, setIsImageViewVisible] = useState(false);
 
   // Delete confirmation modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -197,7 +199,9 @@ export default function AdminAssetDetailScreen() {
         {/* Foto */}
         <View style={{ backgroundColor: "white" }}>
           {photoUrl ? (
-            <Image source={{ uri: photoUrl }} style={{ width: "100%", height: 220 }} resizeMode="contain" />
+            <TouchableOpacity activeOpacity={0.8} onPress={() => setIsImageViewVisible(true)}>
+              <Image source={{ uri: photoUrl }} style={{ width: "100%", height: 220 }} resizeMode="contain" />
+            </TouchableOpacity>
           ) : (
             <View style={{ width: "100%", height: 220, backgroundColor: "#e8f5ee", alignItems: "center", justifyContent: "center" }}>
               <Feather name="image" size={48} color="#135d3a" />
@@ -450,6 +454,16 @@ export default function AdminAssetDetailScreen() {
           </Animated.View>
         </View>
       </Modal>
+
+      {/* ── Image Viewer Modal ────────────────────────────────────── */}
+      <ImageViewing
+        images={[{ uri: photoUrl || "" }]}
+        imageIndex={0}
+        visible={isImageViewVisible}
+        onRequestClose={() => setIsImageViewVisible(false)}
+        swipeToCloseEnabled={true}
+        doubleTapToZoomEnabled={true}
+      />
     </>
   );
 }
