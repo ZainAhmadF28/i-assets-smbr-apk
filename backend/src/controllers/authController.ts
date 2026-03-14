@@ -4,26 +4,26 @@ import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma";
 
 export async function login(req: Request, res: Response): Promise<void> {
-  const { username, password } = req.body as {
-    username?: string;
+  const { email, password } = req.body as {
+    email?: string;
     password?: string;
   };
 
-  if (!username || !password) {
-    res.status(400).json({ message: "Username dan password wajib diisi." });
+  if (!email || !password) {
+    res.status(400).json({ message: "Email dan password wajib diisi." });
     return;
   }
 
-  const user = await prisma.user.findUnique({ where: { username } });
+  const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) {
-    res.status(401).json({ message: "Username atau password salah." });
+    res.status(401).json({ message: "Email atau password salah." });
     return;
   }
 
   const passwordMatch = await bcrypt.compare(password, user.password);
   if (!passwordMatch) {
-    res.status(401).json({ message: "Username atau password salah." });
+    res.status(401).json({ message: "Email atau password salah." });
     return;
   }
 
@@ -31,13 +31,13 @@ export async function login(req: Request, res: Response): Promise<void> {
   const expiresIn = process.env.JWT_EXPIRES_IN ?? "7d";
 
   const token = jwt.sign(
-    { id: user.id, username: user.username, role: user.role },
+    { id: user.id, email: user.email, role: user.role },
     secret,
     { expiresIn } as jwt.SignOptions
   );
 
   res.json({
     token,
-    user: { id: user.id, username: user.username, role: user.role },
+    user: { id: user.id, email: user.email, role: user.role },
   });
 }

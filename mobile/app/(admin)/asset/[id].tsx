@@ -197,7 +197,7 @@ export default function AdminAssetDetailScreen() {
         {/* Foto */}
         <View style={{ backgroundColor: "white" }}>
           {photoUrl ? (
-            <Image source={{ uri: photoUrl }} style={{ width: "100%", height: 220 }} resizeMode="cover" />
+            <Image source={{ uri: photoUrl }} style={{ width: "100%", height: 220 }} resizeMode="contain" />
           ) : (
             <View style={{ width: "100%", height: 220, backgroundColor: "#e8f5ee", alignItems: "center", justifyContent: "center" }}>
               <Feather name="image" size={48} color="#135d3a" />

@@ -16,14 +16,14 @@ import Button from "@components/ui/Button";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ username?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   function validate(): boolean {
     const newErrors: typeof errors = {};
-    if (!username.trim()) newErrors.username = "Username wajib diisi";
+    if (!email.trim()) newErrors.email = "Email wajib diisi";
     if (!password) newErrors.password = "Password wajib diisi";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -33,12 +33,12 @@ export default function LoginScreen() {
     if (!validate()) return;
     setLoading(true);
     try {
-      await authService.login(username.trim(), password);
+      await authService.login(email.trim(), password);
       router.replace("/(admin)/dashboard");
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })
-          ?.response?.data?.message ?? "Username atau password salah";
+          ?.response?.data?.message ?? "Email atau password salah";
       Alert.alert("Login Gagal", msg);
     } finally {
       setLoading(false);
@@ -72,12 +72,12 @@ export default function LoginScreen() {
           </Text>
 
           <InputField
-            label="Username"
+            label="Email"
             required
-            placeholder="Masukkan username"
-            value={username}
-            onChangeText={setUsername}
-            error={errors.username}
+            placeholder="Masukkan email"
+            value={email}
+            onChangeText={setEmail}
+            error={errors.email}
             autoCapitalize="none"
             autoCorrect={false}
           />
