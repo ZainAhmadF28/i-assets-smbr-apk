@@ -14,6 +14,8 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
+import * as FileSystem from "expo-file-system";
 import { Feather } from "@expo/vector-icons";
 import ImageViewing from "react-native-image-viewing";
 import { assetService } from "@services/assetService";
@@ -87,24 +89,69 @@ export default function AdminAssetDetailScreen() {
       {
         text: "Kamera",
         onPress: async () => {
-          const result = await ImagePicker.launchCameraAsync({ quality: 0.7, allowsEditing: true, mediaTypes: ["images"] });
+          const result = await ImagePicker.launchCameraAsync({ quality: 1, allowsEditing: true, mediaTypes: ["images"] });
           if (!result.canceled && result.assets[0] && id) {
-            await uploadPhoto(result.assets[0].uri, id);
+            const compressedUri = await compressUntilUnder1MB(result.assets[0].uri);
+            await uploadPhoto(compressedUri, id);
           }
         },
       },
       {
         text: "Galeri",
         onPress: async () => {
-          const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.7, allowsEditing: true, mediaTypes: ["images"] });
+          const result = await ImagePicker.launchImageLibraryAsync({ quality: 1, allowsEditing: true, mediaTypes: ["images"] });
           if (!result.canceled && result.assets[0] && id) {
-            await uploadPhoto(result.assets[0].uri, id);
+            const compressedUri = await compressUntilUnder1MB(result.assets[0].uri);
+            await uploadPhoto(compressedUri, id);
           }
         },
       },
       { text: "Batal", style: "cancel" },
     ]);
   }
+
+  const compressUntilUnder1MB = async (uri: string): Promise<string> => {
+    // Cek ukuran awal file
+    const initialFileInfo = await FileSystem.getInfoAsync(uri);
+    if (!initialFileInfo.exists) return uri;
+    
+    const initialSizeInMB = (initialFileInfo.size ?? 0) / (1024 * 1024);
+    
+    // Jika dari awal sudah di bawah 1 MB, tidak perlu kompres lagi
+    if (initialSizeInMB <= 1) {
+      return uri;
+    }
+
+    let quality = 0.8;
+    let compressedUri = uri;
+
+    while (quality > 0.1) {
+      const result = await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: 1920 } }],
+        {
+          compress: quality,
+          format: ImageManipulator.SaveFormat.JPEG,
+        }
+      );
+
+      // Cek ukuran file
+      const fileInfo = await FileSystem.getInfoAsync(result.uri);
+      
+      if (!fileInfo.exists) break;
+
+      const fileSizeInMB = (fileInfo.size ?? 0) / (1024 * 1024);
+
+      if (fileSizeInMB <= 1) {
+        compressedUri = result.uri;
+        break;
+      }
+
+      quality -= 0.1; // turunkan kualitas dan coba lagi
+    }
+
+    return compressedUri;
+  };
 
   async function uploadPhoto(uri: string, assetId: string) {
     setUploadingPhoto(true);
