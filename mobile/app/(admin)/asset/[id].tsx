@@ -10,6 +10,7 @@ import {
   Modal,
   Animated,
   Dimensions,
+  Linking,
 } from "react-native";
 import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -273,6 +274,27 @@ export default function AdminAssetDetailScreen() {
               </View>
             )}
             <MapViewer latitude={asset.latitude} longitude={asset.longitude} namaAset={asset.namaAset} height={220} />
+            <TouchableOpacity
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#f1f5f9",
+                borderRadius: 14,
+                paddingVertical: 12,
+                marginTop: 12,
+              }}
+              onPress={() => {
+                const url = `https://www.google.com/maps/search/?api=1&query=${asset.latitude},${asset.longitude}`;
+                Linking.openURL(url);
+              }}
+              activeOpacity={0.7}
+            >
+              <Feather name="map" size={14} color="#334155" />
+              <Text style={{ color: "#334155", fontWeight: "700", fontSize: 13, marginLeft: 6 }}>
+                Buka di Google Maps
+              </Text>
+            </TouchableOpacity>
           </View>
 
           {/* QR Code */}
