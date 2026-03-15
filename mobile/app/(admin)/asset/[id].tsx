@@ -19,6 +19,7 @@ import * as FileSystem from "expo-file-system";
 import { Feather } from "@expo/vector-icons";
 import ImageViewing from "react-native-image-viewing";
 import { assetService } from "@services/assetService";
+import { printQrPdf } from "@services/qrPdfGenerator";
 import type { Asset } from "@shared-types/index";
 import KondisiBadge from "@components/ui/KondisiBadge";
 import MapViewer from "@components/maps/MapViewer";
@@ -34,6 +35,7 @@ export default function AdminAssetDetailScreen() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [isImageViewVisible, setIsImageViewVisible] = useState(false);
+  const [printingPdf, setPrintingPdf] = useState(false);
 
   // Delete confirmation modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -353,6 +355,55 @@ export default function AdminAssetDetailScreen() {
               resizeMode="contain"
             />
             <Text className="text-xs text-gray-400 mt-2 font-mono">{asset.id}</Text>
+
+            {/* Cetak QR Code PDF Button */}
+            <TouchableOpacity
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#135d3a",
+                borderRadius: 14,
+                paddingHorizontal: 20,
+                paddingVertical: 12,
+                marginTop: 16,
+                width: "100%",
+                shadowColor: "#135d3a",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 4,
+              }}
+              activeOpacity={0.7}
+              disabled={printingPdf}
+              onPress={async () => {
+                setPrintingPdf(true);
+                try {
+                  await printQrPdf({
+                    id: asset.id,
+                    namaAset: asset.namaAset,
+                    nomorAset: asset.nomorAset,
+                    kelasAsetSig: asset.kelasAsetSig,
+                    kelasAsetSmbr: asset.kelasAsetSmbr,
+                    site: asset.site,
+                    kondisi: asset.kondisi,
+                  });
+                } finally {
+                  setPrintingPdf(false);
+                }
+              }}
+            >
+              {printingPdf ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <Feather name="printer" size={16} color="white" />
+                  <Text style={{ color: "white", fontWeight: "700", fontSize: 14, marginLeft: 8 }}>
+                    Cetak QR Code (PDF)
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
           </View>
 
           {/* Hapus Aset Button */}
