@@ -9,6 +9,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
 import { Feather } from "@expo/vector-icons";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
 import QRCode from "react-native-qrcode-svg";
 import { authService } from "@services/authService";
 import { assetService } from "@services/assetService";
@@ -122,6 +124,7 @@ export default function AdminHomeScreen() {
   const [activeTable, setActiveTable] = useState<TableKey>("aset");
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [previewQrValue, setPreviewQrValue] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   // data states
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -286,7 +289,39 @@ export default function AdminHomeScreen() {
     ]);
   }
 
-  // ── Row renderers ─────────────────────────────────────────────────────────
+  // ── Callbacks ─────────────────────────────────────────────────────────────
+  const handleExport = useCallback(async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      // Create search query param if any
+      const searchParam = search.trim() ? `?search=${encodeURIComponent(search.trim())}` : "";
+      const url = `${API_BASE_URL}/api/export/${activeTable}${searchParam}`;
+      
+      const fileUri = `${(FileSystem as any).documentDirectory}export_${activeTable}_${Date.now()}.xlsx`;
+      
+      const downloadResult = await FileSystem.downloadAsync(url, fileUri);
+      
+      if (downloadResult.status !== 200) {
+        throw new Error("Gagal mengunduh file");
+      }
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(downloadResult.uri, {
+          mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          dialogTitle: `Ekspor Tabel ${activeTable.toUpperCase()}`,
+        });
+      } else {
+        Alert.alert("Info", `File berhasil diunduh ke: ${downloadResult.uri}`);
+      }
+    } catch (error) {
+      console.error("Export error:", error);
+      Alert.alert("Error", "Gagal mengekspor data ke Excel.");
+    } finally {
+      setExporting(false);
+    }
+  }, [activeTable, search, exporting]);
+
   const renderAsetRow = useCallback(({ item, index }: { item: Asset; index: number }) => (
     <MemoAsetRow item={item} index={index} onEdit={openEdit} onDelete={confirmDelete} onPreviewImage={setPreviewImageUrl} onPreviewQr={setPreviewQrValue} />
   ), [openEdit, confirmDelete]);
@@ -406,17 +441,21 @@ export default function AdminHomeScreen() {
         )}
       </View>
 
-      {/* ── FAB (aset only) ── */}
-      {activeTable === "aset" && (
-        <View style={{ position: "absolute", bottom: Platform.OS === "android" ? 20 : 36, right: 20, flexDirection: "row", gap: 12, alignItems: "flex-end" }}>
-          <TouchableOpacity onPress={() => router.push("/(admin)/scan" as any)} style={{ width: 46, height: 46, borderRadius: 15, backgroundColor: "#1e293b", alignItems: "center", justifyContent: "center", shadowColor: "#1e293b", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 6 }}>
-            <Feather name="camera" size={19} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={openAdd} style={{ width: 56, height: 56, borderRadius: 20, backgroundColor: GREEN, alignItems: "center", justifyContent: "center", shadowColor: GREEN, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 8 }} activeOpacity={0.85}>
-            <Feather name="plus" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
-      )}
+      {/* ── Export FAB ── */}
+      <View style={{ position: "absolute", bottom: Platform.OS === "android" ? 20 : 36, right: 20 }}>
+        <TouchableOpacity
+          onPress={handleExport}
+          disabled={exporting}
+          style={{ width: 56, height: 56, borderRadius: 20, backgroundColor: GREEN, alignItems: "center", justifyContent: "center", shadowColor: GREEN, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 8, opacity: exporting ? 0.7 : 1 }}
+          activeOpacity={0.85}
+        >
+          {exporting ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <Feather name="download-cloud" size={24} color="white" />
+          )}
+        </TouchableOpacity>
+      </View>
 
       {/* ── Sidebar ── */}
       {sidebarOpen && (

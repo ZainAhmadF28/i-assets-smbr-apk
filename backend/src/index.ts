@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.routes";
 import assetRoutes from "./routes/asset.routes";
 import activityLogRoutes from "./routes/activityLog.routes";
 import userRoutes from "./routes/user.routes";
+import exportRoutes from "./routes/export.routes";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -25,6 +26,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/assets", assetRoutes);
 app.use("/api/activity-logs", activityLogRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/export", exportRoutes);
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get("/health", (_req, res) => {
