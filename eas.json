@@ -1,27 +1,25 @@
 {
-    "cli": {
-        "version": ">= 18.3.0",
-        "appVersionSource": "remote"
+  "cli": {
+    "version": ">= 18.3.0",
+    "appVersionSource": "remote",
+    "requireCommit": true
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
     },
-    "build": {
-        "development": {
-            "developmentClient": true,
-            "distribution": "internal",
-            "projectRoot": "mobile"
-        },
-        "preview": {
-            "distribution": "internal",
-            "projectRoot": "mobile",
-            "android": {
-                "buildType": "apk"
-            }
-        },
-        "production": {
-            "autoIncrement": true,
-            "projectRoot": "mobile"
-        }
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
     },
-    "submit": {
-        "production": {}
+    "production": {
+      "autoIncrement": true
     }
+  },
+  "submit": {
+    "production": {}
+  }
 }

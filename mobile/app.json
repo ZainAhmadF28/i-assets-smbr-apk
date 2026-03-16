@@ -5,10 +5,10 @@
     "version": "1.0.0",
     "scheme": "iasset",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logoAPK.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/icon.png",
+      "image": "./assets/logoAPK.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -19,9 +19,8 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./assets/logoAPK.png",
+        "monochromeImage": "./assets/logoAPK.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.smbr.iasset",
