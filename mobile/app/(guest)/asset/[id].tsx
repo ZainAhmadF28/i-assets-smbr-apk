@@ -40,6 +40,32 @@ export default function GuestAssetDetailScreen() {
     }
   }
 
+  function confirmDelete() {
+    Alert.alert(
+      "Hapus Aset",
+      `Apakah Anda yakin ingin menghapus aset "${asset?.namaAset}"?`,
+      [
+        { text: "Batal", style: "cancel" },
+        { 
+          text: "Hapus", 
+          style: "destructive", 
+          onPress: async () => {
+            try {
+              if (asset) {
+                await assetService.remove(asset.id);
+                Alert.alert("Berhasil", "Aset berhasil dihapus", [
+                  { text: "OK", onPress: () => router.back() }
+                ]);
+              }
+            } catch (err) {
+              Alert.alert("Error", "Gagal menghapus aset");
+            }
+          }
+        },
+      ]
+    );
+  }
+
   if (loading) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#f8fafc" }}>
@@ -83,6 +109,25 @@ export default function GuestAssetDetailScreen() {
           </View>
         )}
 
+      </View>
+
+      {/* Action Buttons */}
+      <View style={{ flexDirection: "row", paddingHorizontal: 16, marginTop: 16, gap: 12 }}>
+        <TouchableOpacity
+          onPress={() => router.push(`/(guest)/asset/edit/${asset.id}` as any)}
+          style={{ flex: 1, backgroundColor: "#135d3a", paddingVertical: 12, borderRadius: 12, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8 }}
+        >
+          <Feather name="edit-2" size={16} color="white" />
+          <Text style={{ color: "white", fontWeight: "700", fontSize: 13 }}>Edit Aset</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          onPress={confirmDelete}
+          style={{ flex: 1, backgroundColor: "#fee2e2", paddingVertical: 12, borderRadius: 12, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8 }}
+        >
+          <Feather name="trash-2" size={16} color="#ef4444" />
+          <Text style={{ color: "#ef4444", fontWeight: "700", fontSize: 13 }}>Hapus</Text>
+        </TouchableOpacity>
       </View>
 
       <View className="px-4 pt-4 pb-8">
