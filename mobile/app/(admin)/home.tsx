@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
 import { Feather } from "@expo/vector-icons";
+import QRCode from "react-native-qrcode-svg";
 import { authService } from "@services/authService";
 import { assetService } from "@services/assetService";
 import { API_BASE_URL } from "@config/apiConfig";
@@ -49,8 +50,8 @@ const COLS_ASET = [
   { key: "longitude", label: "Longitude", w: 110 },
   { key: "tanggalUpdate", label: "Tgl Update", w: 130 },
   { key: "keterangan", label: "Keterangan", w: 200 },
-  { key: "fotoUrl", label: "Foto URL", w: 200 },
-  { key: "qrCodeUrl", label: "QR URL", w: 200 },
+  { key: "fotoUrl", label: "Foto", w: 80 },
+  { key: "qrCode", label: "QR Code", w: 80 },
   { key: "createdAt", label: "Dibuat", w: 160 },
   { key: "updatedAt", label: "Diperbarui", w: 160 },
   { key: "aksi", label: "Aksi", w: 96 },
@@ -102,7 +103,7 @@ const KONDISI_OPTIONS: Array<{ label: string; value: Kondisi }> = [
   { label: "Rusak Berat", value: "RUSAK_BERAT" }, { label: "Hilang", value: "HILANG" },
   { label: "Belum Dicek", value: "BELUM_DICEK" },
 ];
-const ROW_H = 52;
+const ROW_H = 64;
 
 function fmtDate(s: string | null | undefined): string {
   if (!s) return "–";
@@ -119,6 +120,8 @@ export default function AdminHomeScreen() {
   const [user, setUser] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTable, setActiveTable] = useState<TableKey>("aset");
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [previewQrValue, setPreviewQrValue] = useState<string | null>(null);
 
   // data states
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -285,7 +288,7 @@ export default function AdminHomeScreen() {
 
   // ── Row renderers ─────────────────────────────────────────────────────────
   const renderAsetRow = useCallback(({ item, index }: { item: Asset; index: number }) => (
-    <MemoAsetRow item={item} index={index} onEdit={openEdit} onDelete={confirmDelete} />
+    <MemoAsetRow item={item} index={index} onEdit={openEdit} onDelete={confirmDelete} onPreviewImage={setPreviewImageUrl} onPreviewQr={setPreviewQrValue} />
   ), [openEdit, confirmDelete]);
 
   const renderUserRow = useCallback(({ item, index }: { item: any; index: number }) => (
@@ -357,7 +360,7 @@ export default function AdminHomeScreen() {
       </View>
 
       {/* ── Table ── */}
-      <View style={{ flex: 1, marginHorizontal: 14, marginTop: 14, borderRadius: 20, overflow: "hidden", backgroundColor: "white", shadowColor: "#94a3b8", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 10, elevation: 4 }}>
+      <View style={{ flex: 1, marginHorizontal: 14, marginTop: 14, backgroundColor: "white", shadowColor: "#94a3b8", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 10, elevation: 4 }}>
         {loading ? (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
             <ActivityIndicator size="large" color={GREEN} />
@@ -540,6 +543,30 @@ export default function AdminHomeScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* ── Image Viewer Modal ── */}
+      <Modal visible={!!previewImageUrl || !!previewQrValue} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.85)", justifyContent: "center", alignItems: "center" }}>
+          {previewImageUrl && (
+            <Image
+              source={{ uri: previewImageUrl }}
+              style={{ width: "95%", height: "70%", borderRadius: 12 }}
+              resizeMode="contain"
+            />
+          )}
+          {previewQrValue && (
+            <View style={{ padding: 24, backgroundColor: "white", borderRadius: 16 }}>
+              <QRCode value={previewQrValue} size={250} />
+            </View>
+          )}
+          <TouchableOpacity
+            style={{ position: "absolute", top: Platform.OS === "ios" ? 60 : 40, right: 20, width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" }}
+            onPress={() => { setPreviewImageUrl(null); setPreviewQrValue(null); }}
+          >
+            <Feather name="x" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -564,7 +591,7 @@ function PlainText({ children, color = "#1e293b", size = 11 }: { children: React
 // ─── Memoized rows ────────────────────────────────────────────────────────────
 const ROW_HEIGHT = ROW_H;
 
-const MemoAsetRow = memo(function AsetRow({ item, index, onEdit, onDelete }: { item: Asset; index: number; onEdit: (a: Asset) => void; onDelete: (a: Asset) => void }) {
+const MemoAsetRow = memo(function AsetRow({ item, index, onEdit, onDelete, onPreviewImage, onPreviewQr }: { item: Asset; index: number; onEdit: (a: Asset) => void; onDelete: (a: Asset) => void; onPreviewImage: (url: string) => void; onPreviewQr: (val: string) => void }) {
   const c = KONDISI_COLOR[item.kondisi] ?? GREEN;
   const isEven = index % 2 === 0;
   const bg = isEven ? "white" : "#f8fafc";
@@ -585,8 +612,31 @@ const MemoAsetRow = memo(function AsetRow({ item, index, onEdit, onDelete }: { i
       <Cell w={COLS_ASET[12].w}><PlainText color="#64748b">{item.longitude != null ? String(item.longitude) : "–"}</PlainText></Cell>
       <Cell w={COLS_ASET[13].w}><PlainText color="#64748b">{fmtDate(item.tanggalUpdate)}</PlainText></Cell>
       <Cell w={COLS_ASET[14].w}><PlainText color="#64748b">{item.keterangan || "–"}</PlainText></Cell>
-      <Cell w={COLS_ASET[15].w}><PlainText color="#94a3b8">{item.fotoUrl || "–"}</PlainText></Cell>
-      <Cell w={COLS_ASET[16].w}><PlainText color="#94a3b8">{item.qrCodeUrl || "–"}</PlainText></Cell>
+      <Cell w={COLS_ASET[15].w}>
+        {item.fotoUrl ? (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => onPreviewImage(item.fotoUrl!.startsWith("http") ? item.fotoUrl! : `${API_BASE_URL}${item.fotoUrl!.startsWith("/") ? "" : "/"}${item.fotoUrl}`)}
+          >
+            <Image
+              source={{ uri: item.fotoUrl.startsWith("http") ? item.fotoUrl : `${API_BASE_URL}${item.fotoUrl.startsWith("/") ? "" : "/"}${item.fotoUrl}` }}
+              style={{ width: 52, height: 52, borderRadius: 8, backgroundColor: "#f1f5f9" }}
+              resizeMode="cover"
+            />
+          </TouchableOpacity>
+        ) : (
+          <PlainText color="#94a3b8">–</PlainText>
+        )}
+      </Cell>
+      <Cell w={COLS_ASET[16].w}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => onPreviewQr(item.nomorAset)}
+          style={{ width: 52, height: 52, borderRadius: 8, backgroundColor: "white", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#e2e8f0", overflow: "hidden" }}
+        >
+          <QRCode value={item.nomorAset} size={42} />
+        </TouchableOpacity>
+      </Cell>
       <Cell w={COLS_ASET[17].w}><PlainText color="#94a3b8">{fmtDate(item.createdAt)}</PlainText></Cell>
       <Cell w={COLS_ASET[18].w}><PlainText color="#94a3b8">{fmtDate(item.updatedAt)}</PlainText></Cell>
       <Cell w={COLS_ASET[19].w}>
