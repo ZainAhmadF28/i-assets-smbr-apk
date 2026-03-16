@@ -1,0 +1,23 @@
+# Upload only the Expo app source needed by EAS.
+# Build should be run from /mobile, but these rules also keep root builds clean.
+backend/
+.git/
+node_modules/
+backend/node_modules/
+mobile/node_modules/
+.expo/
+mobile/.expo/
+dist/
+backend/dist/
+uploads/
+backend/uploads/
+data/
+backend/data/
+web-build/
+android/
+ios/
+*.log
+*.XLSX
+*.xlsx
+Thumbs.db
+.DS_Store

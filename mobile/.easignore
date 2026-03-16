@@ -1,0 +1,25 @@
+# Keep EAS uploads focused on source files only.
+node_modules/
+.expo/
+dist/
+web-build/
+.kotlin/
+android/
+ios/
+.metro-health-check*
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+*.log
+*.tsbuildinfo
+Thumbs.db
+.DS_Store
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.env.local
+.env*.local

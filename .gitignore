@@ -4,6 +4,8 @@
 
 # ── Dependencies ──
 node_modules/
+backend/node_modules/
+mobile/node_modules/
 
 # ── Environment / Secrets (HARAM DIPUSH) ──
 .env
@@ -34,6 +36,12 @@ yarn-error.log*
 
 # ── Expo ──
 .expo/
+mobile/.expo/
+backend/dist/
+backend/uploads/
+backend/data/
+*.XLSX
+*.xlsx
 
 # ── Debug / Test Scripts ──
 **/test-*.js
