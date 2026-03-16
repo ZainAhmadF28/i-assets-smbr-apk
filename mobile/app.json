@@ -38,7 +38,6 @@
     "plugins": [
       "expo-router",
       "expo-camera",
-      "expo-barcode-scanner",
       "expo-sharing",
       [
         "expo-location",
