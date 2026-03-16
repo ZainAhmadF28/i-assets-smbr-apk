@@ -58,7 +58,11 @@
       "typedRoutes": true
     },
     "extra": {
-      "router": {}
-    }
+      "router": {},
+      "eas": {
+        "projectId": "871dbf65-2068-4dc4-9f98-c4b093a848d0"
+      }
+    },
+    "owner": "zainahmadf"
   }
 }
