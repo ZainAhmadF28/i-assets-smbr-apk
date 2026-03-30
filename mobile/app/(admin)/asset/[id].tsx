@@ -15,7 +15,7 @@ import {
 import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import { Feather } from "@expo/vector-icons";
 import ImageViewing from "react-native-image-viewing";
 import { assetService } from "@services/assetService";
@@ -161,8 +161,14 @@ export default function AdminAssetDetailScreen() {
       const updated = await assetService.uploadPhoto(assetId, uri);
       setAsset(updated);
       Alert.alert("Berhasil", "Foto aset berhasil diperbarui");
-    } catch {
-      Alert.alert("Error", "Gagal mengupload foto");
+    } catch (error: any) {
+      console.log("=== ERROR UPLOAD FOTO ===");
+      console.log("Pesan Error:", error.message);
+      if (error.response) {
+        console.log("Data Response:", error.response.data);
+        console.log("Status Code:", error.response.status);
+      }
+      Alert.alert("Error", `Gagal mengupload foto: ${error.message}`);
     } finally {
       setUploadingPhoto(false);
     }
