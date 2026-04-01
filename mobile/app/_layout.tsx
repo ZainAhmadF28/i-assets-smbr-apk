@@ -310,16 +310,13 @@ function AppContent() {
     return null; // brief moment while checking AsyncStorage
   }
 
-  if (!isLoggedIn) {
-    return <LoginForm />;
-  }
-
-  // Logged in → normal app
+  // Always render the Stack (expo-router needs it mounted).
+  // Show login overlay on top when not logged in.
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
       <SafeAreaProvider>
         <NotificationProvider>
-          <StatusBar style="light" />
+          <StatusBar style={isLoggedIn ? "light" : "dark"} />
           <Stack
             screenOptions={{
               headerStyle: { backgroundColor: "#135d3a" },
@@ -334,6 +331,11 @@ function AppContent() {
           </Stack>
         </NotificationProvider>
       </SafeAreaProvider>
+      {!isLoggedIn && (
+        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}>
+          <LoginForm />
+        </View>
+      )}
     </SafeAreaView>
   );
 }

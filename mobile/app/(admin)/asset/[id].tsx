@@ -296,6 +296,7 @@ export default function AdminAssetDetailScreen() {
             <KondisiBadge kondisi={asset.kondisi} />
             <View className="mt-3 pt-3 border-t border-gray-50">
               <InfoRow label="Kelas SIG" value={asset.kelasAsetSig || "-"} />
+              <InfoRow label="Kelas SMBR" value={asset.kelasAsetSmbr || "-"} />
               <InfoRow label="Site" value={asset.site || "-"} />
               <InfoRow label="Jumlah" value={`${asset.qty} ${asset.satuan || "PC"}`} />
             </View>

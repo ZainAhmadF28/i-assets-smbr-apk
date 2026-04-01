@@ -13,6 +13,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import QRCode from "react-native-qrcode-svg";
 import { authService } from "@services/authService";
+import { useAuth } from "../../context/AuthContext";
 import { assetService } from "@services/assetService";
 import { API_BASE_URL } from "@config/apiConfig";
 import type { Asset, Kondisi, User } from "@shared-types/index";
@@ -116,6 +117,7 @@ function fmtDate(s: string | null | undefined): string {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function AdminHomeScreen() {
   const router = useRouter();
+  const { logout: contextLogout } = useAuth();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const sidebarAnim = useRef(new Animated.Value(-280)).current;
 
@@ -285,7 +287,7 @@ export default function AdminHomeScreen() {
   async function handleLogout() {
     Alert.alert("Logout", "Yakin ingin keluar?", [
       { text: "Batal", style: "cancel" },
-      { text: "Logout", style: "destructive", onPress: async () => { await authService.logout(); router.replace("/"); } },
+      { text: "Logout", style: "destructive", onPress: async () => { await contextLogout(); router.replace("/"); } },
     ]);
   }
 
