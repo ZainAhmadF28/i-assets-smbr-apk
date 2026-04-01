@@ -16,9 +16,8 @@ import {
 import { useRouter, useFocusEffect } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Feather } from "@expo/vector-icons";
-import { API_BASE_URL } from "../config/apiConfig";
-import { useNotification } from "../context/NotificationContext";
-import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from "../../config/apiConfig";
+import { useNotification } from "../../context/NotificationContext";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 const CARD_W = SCREEN_W - 48;
@@ -76,7 +75,6 @@ function timeAgo(dateString: string): string {
 export default function HomePage() {
   const router = useRouter();
   const { unreadCount, markAsSeen } = useNotification();
-  const { user, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<AssetUpdate[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -204,7 +202,7 @@ export default function HomePage() {
       >
         {/* Hero Header with Background Image */}
         <ImageBackground
-          source={require("../assets/background.png")}
+          source={require("../../assets/background.png")}
           className="w-full"
           style={{ height: 220 }}
           resizeMode="stretch"
@@ -311,7 +309,7 @@ export default function HomePage() {
                     activeOpacity={0.7}
                     onPress={() => {
                       setShowDropdown(false);
-                      router.push(`/(admin)/asset/${item.id}` as any);
+                      router.push(`/(guest)/asset/${item.id}` as any);
                     }}
                     style={{
                       flexDirection: "row",
@@ -479,7 +477,7 @@ export default function HomePage() {
                     <TouchableOpacity
                       key={item.key}
                       activeOpacity={0.7}
-                      onPress={() => router.push({ pathname: "/(admin)/dashboard", params: { kondisi: item.key } })}
+                      onPress={() => router.push({ pathname: "/(guest)/dashboard", params: { kondisi: item.key } })}
                       style={{
                         width: "31%",
                         backgroundColor: "#f8fafc",
@@ -522,7 +520,7 @@ export default function HomePage() {
             }}
           >
             <TouchableOpacity
-              onPress={() => router.push("/(admin)/scan")}
+              onPress={() => router.push("/(guest)/scan")}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -550,7 +548,7 @@ export default function HomePage() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => router.push("/(admin)/dashboard")}
+              onPress={() => router.push("/(guest)/dashboard")}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -625,7 +623,7 @@ export default function HomePage() {
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     activeOpacity={0.88}
-                    onPress={() => router.push("/(admin)/dashboard")}
+                    onPress={() => router.push("/(guest)/dashboard")}
                     style={{
                       width: CARD_W,
                       backgroundColor: "white",
@@ -786,7 +784,7 @@ export default function HomePage() {
           {/* Aset */}
           <TouchableOpacity
             className="items-center px-3 py-1"
-            onPress={() => router.push("/(admin)/dashboard")}
+            onPress={() => router.push("/(guest)/dashboard")}
           >
             <Feather name="box" size={20} color="#94a3b8" />
             <Text className="text-[10px] font-medium text-slate-400">Aset</Text>
@@ -795,7 +793,7 @@ export default function HomePage() {
           {/* Scan Center elevated */}
           <View className="items-center" style={{ marginTop: -28 }}>
             <TouchableOpacity
-              onPress={() => router.push("/(admin)/scan")}
+              onPress={() => router.push("/(guest)/scan")}
               className="w-14 h-14 rounded-2xl items-center justify-center"
               style={{
                 backgroundColor: "#135d3a",
@@ -861,28 +859,20 @@ export default function HomePage() {
             <Text className="text-[10px] font-medium text-slate-400">Log</Text>
           </TouchableOpacity>
 
-          {/* Admin / Logout */}
-          {user?.role === "admin" ? (
-            <TouchableOpacity
-              className="items-center px-3 py-1"
-              onPress={() => router.push("/(admin)/home")}
-            >
-              <Feather name="user" size={20} color="#94a3b8" />
-              <Text className="text-[10px] font-medium text-slate-400">
-                Admin
-              </Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              className="items-center px-3 py-1"
-              onPress={() => logout()}
-            >
-              <Feather name="log-out" size={20} color="#94a3b8" />
-              <Text className="text-[10px] font-medium text-slate-400">
-                Logout
-              </Text>
-            </TouchableOpacity>
-          )}
+          {/* Logout */}
+          <TouchableOpacity
+            className="items-center px-3 py-1"
+            onPress={async () => {
+              const { authService } = await import("../../services/authService");
+              await authService.logout();
+              router.replace("/(auth)/login");
+            }}
+          >
+            <Feather name="log-out" size={20} color="#94a3b8" />
+            <Text className="text-[10px] font-medium text-slate-400">
+              Keluar
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>

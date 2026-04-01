@@ -1,25 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { Stack, useRouter } from "expo-router";
-import { View, ActivityIndicator } from "react-native";
-import { authService } from "@services/authService";
+import React from "react";
+import { Stack } from "expo-router";
 
 export default function AdminLayout() {
-  const router = useRouter();
-  const [checking, setChecking] = useState(true);
-
-  useEffect(() => {
-    // DEV MODE: Bypass authentication so guest can access CRUD easily
-    setChecking(false);
-  }, []);
-
-  if (checking) {
-    return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
-        <ActivityIndicator size="large" color="#135d3a" />
-      </View>
-    );
-  }
-
   return (
     <Stack
       screenOptions={{

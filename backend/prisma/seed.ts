@@ -22,6 +22,20 @@ async function main() {
   })
   console.log('✅ Admin user dibuat')
 
+  // ── Buat default User Biasa ──
+  const hashedUserPassword = await bcrypt.hash('user123', 10)
+  await prisma.user.upsert({
+    where: { email: 'user@semenbaturaja.co.id' },
+    update: {},
+    create: {
+      name:     'User Biasa',
+      email:    'user@semenbaturaja.co.id',
+      password: hashedUserPassword,
+      role:     'user'
+    }
+  })
+  console.log('✅ User biasa dibuat')
+
   // ── Import Excel ──
   const filePath = path.join(__dirname, '../data/Master_Data_Aset_Umum.XLSX')
   const workbook = XLSX.readFile(filePath)

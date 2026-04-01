@@ -359,9 +359,6 @@ export default function AdminHomeScreen() {
             </View>
           </View>
           <View style={{ flexDirection: "row", gap: 8 }}>
-            <TouchableOpacity onPress={() => router.replace("/")} style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" }}>
-              <Feather name="home" size={15} color="rgba(255,255,255,0.85)" />
-            </TouchableOpacity>
             <TouchableOpacity onPress={() => router.push("/(admin)/scan" as any)} style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" }}>
               <Feather name="maximize" size={15} color="rgba(255,255,255,0.85)" />
             </TouchableOpacity>
