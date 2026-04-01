@@ -675,10 +675,10 @@ const MemoAsetRow = memo(function AsetRow({ item, index, onEdit, onDelete, onPre
       <Cell w={COLS_ASET[16].w}>
         <TouchableOpacity
           activeOpacity={0.7}
-          onPress={() => onPreviewQr(item.nomorAset)}
+          onPress={() => onPreviewQr(item.id)}
           style={{ width: 52, height: 52, borderRadius: 8, backgroundColor: "white", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#e2e8f0", overflow: "hidden" }}
         >
-          <QRCode value={item.nomorAset} size={42} />
+          <QRCode value={item.id} size={42} />
         </TouchableOpacity>
       </Cell>
       <Cell w={COLS_ASET[17].w}><PlainText color="#94a3b8">{fmtDate(item.createdAt)}</PlainText></Cell>
