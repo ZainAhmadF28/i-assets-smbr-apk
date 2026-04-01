@@ -433,17 +433,30 @@ export default function AdminAssetDetailScreen() {
 
           {/* Activity Log / Timeline */}
           <View className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
-            <View className="flex-row items-center mb-4">
-              <Feather name="clock" size={16} color="#64748b" />
-              <Text className="text-sm font-semibold text-gray-700 ml-2">Riwayat Perubahan</Text>
+            <View className="flex-row items-center justify-between mb-4">
+              <View className="flex-row items-center">
+                <Feather name="clock" size={16} color="#64748b" />
+                <Text className="text-sm font-semibold text-gray-700 ml-2">Riwayat Perubahan</Text>
+              </View>
+              {logs.length > 0 && (
+                <View style={{ backgroundColor: "#e8f5ee", borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
+                  <Text style={{ fontSize: 11, color: "#135d3a", fontWeight: "700" }}>{logs.length} entri</Text>
+                </View>
+              )}
             </View>
-            
+
             {logsLoading ? (
               <ActivityIndicator size="small" color="#135d3a" />
             ) : logs.length === 0 ? (
               <Text className="text-sm text-gray-400 text-center py-4">Belum ada riwayat perubahan.</Text>
             ) : (
-              <View className="ml-2">
+              <ScrollView
+                style={{ maxHeight: 320 }}
+                nestedScrollEnabled={true}
+                showsVerticalScrollIndicator={true}
+                indicatorStyle="black"
+              >
+                <View className="ml-2" style={{ paddingBottom: 4 }}>
                 {logs.map((log, index) => {
                   const isLast = index === logs.length - 1;
                   // Deteksi format gabungan "Edit: Nama, Kondisi, ..."
@@ -510,6 +523,7 @@ export default function AdminAssetDetailScreen() {
                   );
                 })}
               </View>
+              </ScrollView>
             )}
           </View>
 
