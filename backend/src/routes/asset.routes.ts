@@ -8,6 +8,7 @@ import {
   deleteAsset,
   uploadPhoto,
   getQrCode,
+  getAssetLogs
 } from "../controllers/assetController";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { upload } from "../middlewares/uploadMiddleware";
@@ -24,6 +25,7 @@ router.get("/:id/qrcode", getQrCode);
 router.post("/", authMiddleware, createAsset);
 router.put("/:id", authMiddleware, updateAsset);
 router.delete("/:id", authMiddleware, deleteAsset);
+router.get("/:id/logs", authMiddleware, getAssetLogs);
 router.post("/:id/photo", authMiddleware, upload.single("photo"), uploadPhoto);
 
 export default router;

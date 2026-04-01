@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { AuthRequest } from "../middlewares/authMiddleware";
 import QRCode from "qrcode";
 import prisma from "../lib/prisma";
 
@@ -75,7 +76,7 @@ export async function getAssetById(req: Request, res: Response): Promise<void> {
 }
 
 // ── POST /api/assets ─────────────────────────────────────────────────────────
-export async function createAsset(req: Request, res: Response): Promise<void> {
+export async function createAsset(req: AuthRequest, res: Response): Promise<void> {
   const {
     nomorAset, namaAset, kodeKelas, kelasAsetSmbr, kelasAsetSig,
     site, qty, satuan, latitude, longitude, kondisi, keterangan,
@@ -111,9 +112,12 @@ export async function createAsset(req: Request, res: Response): Promise<void> {
 
   await prisma.assetLog.create({
     data: {
-      action: "CREATED",
+      action: "Tambah Aset",
       assetId: asset.id,
-      catatan: `Aset baru ditambahkan — kelas SIG ${asset.kelasAsetSig}, kondisi ${asset.kondisi}`,
+      namaAset: asset.namaAset,
+      nomorAset: asset.nomorAset,
+      userId: req.user?.id,
+      catatan: `Aset baru ditambahkan — kelas SIG ${asset.kelasAsetSig || '-'}, kondisi ${asset.kondisi}`,
     },
   });
 
@@ -121,7 +125,7 @@ export async function createAsset(req: Request, res: Response): Promise<void> {
 }
 
 // ── PUT /api/assets/:id ───────────────────────────────────────────────────────
-export async function updateAsset(req: Request, res: Response): Promise<void> {
+export async function updateAsset(req: AuthRequest, res: Response): Promise<void> {
   const { id } = req.params;
   const {
     nomorAset, namaAset, kodeKelas, kelasAsetSmbr, kelasAsetSig,
@@ -161,19 +165,78 @@ export async function updateAsset(req: Request, res: Response): Promise<void> {
     },
   });
 
-  await prisma.assetLog.create({
-    data: {
-      assetId: asset.id,
-      action: "UPDATED",
-      catatan: "Data aset diperbarui",
-    },
-  });
+  // Kumpulkan semua field yang berubah dalam satu sesi edit
+  type ChangeItem = { field: string; from: string; to: string };
+  const changes: ChangeItem[] = [];
+
+  if (nomorAset != null && nomorAset !== existing.nomorAset)
+    changes.push({ field: "Nomor Aset", from: existing.nomorAset, to: String(nomorAset) });
+
+  if (namaAset != null && namaAset !== existing.namaAset)
+    changes.push({ field: "Nama", from: existing.namaAset, to: String(namaAset) });
+
+  if (kelasAsetSig !== undefined && kelasAsetSig !== existing.kelasAsetSig)
+    changes.push({ field: "Kategori", from: existing.kelasAsetSig || "Kosong", to: String(kelasAsetSig || "Kosong") });
+
+  if (kondisi != null && kondisi !== existing.kondisi)
+    changes.push({ field: "Kondisi", from: existing.kondisi, to: String(kondisi) });
+
+  if (site !== undefined && site !== existing.site)
+    changes.push({ field: "Site", from: existing.site || "Kosong", to: String(site || "Kosong") });
+
+  if (qty != null && Number(qty) !== existing.qty)
+    changes.push({ field: "Jumlah", from: String(existing.qty), to: String(qty) });
+
+  if (satuan != null && satuan !== existing.satuan)
+    changes.push({ field: "Satuan", from: existing.satuan || "-", to: String(satuan) });
+
+  const latChanged = latitude !== undefined && Number(latitude ?? 0) !== Number(existing.latitude ?? 0);
+  const lonChanged = longitude !== undefined && Number(longitude ?? 0) !== Number(existing.longitude ?? 0);
+  if (latChanged || lonChanged)
+    changes.push({
+      field: "Koordinat GPS",
+      from: existing.latitude != null ? `${existing.latitude}, ${existing.longitude}` : "Kosong",
+      to: latitude != null ? `${latitude}, ${longitude}` : "Kosong",
+    });
+
+  if (keterangan !== undefined && keterangan !== existing.keterangan)
+    changes.push({ field: "Keterangan", from: existing.keterangan || "Kosong", to: String(keterangan || "Kosong") });
+
+  if (changes.length > 0) {
+    // Satu log entry per sesi edit — merangkum semua field yang berubah
+    const fieldList = changes.map((c) => c.field).join(", ");
+    const catatanLines = changes.map((c) => `• ${c.field}: "${c.from}" → "${c.to}"`).join("\n");
+
+    await prisma.assetLog.create({
+      data: {
+        assetId: asset.id,
+        namaAset: asset.namaAset,
+        nomorAset: asset.nomorAset,
+        userId: req.user?.id,
+        action: `Edit: ${fieldList}`,
+        catatan: catatanLines,
+        newValue: JSON.stringify(changes),
+      },
+    });
+  } else {
+    // Fallback: tidak ada field yang benar-benar berubah nilainya
+    await prisma.assetLog.create({
+      data: {
+        assetId: asset.id,
+        namaAset: asset.namaAset,
+        nomorAset: asset.nomorAset,
+        userId: req.user?.id,
+        action: "Pembaruan Data",
+        catatan: "Tidak ada perubahan data yang terdeteksi.",
+      },
+    });
+  }
 
   res.json(asset);
 }
 
 // ── DELETE /api/assets/:id ────────────────────────────────────────────────────
-export async function deleteAsset(req: Request, res: Response): Promise<void> {
+export async function deleteAsset(req: AuthRequest, res: Response): Promise<void> {
   const { id } = req.params;
 
   const existing = await prisma.asset.findUnique({ where: { id: String(id) } });
@@ -182,17 +245,25 @@ export async function deleteAsset(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  await prisma.asset.delete({ where: { id: String(id) } });
+  // Buat log terlebih dahulu agar masih merujuk ke data yang benar
+  // Meski relasi akan putus saat delete (SetNull), namaAset dan tabel akan tetap tersimpan
+  await prisma.assetLog.create({
+    data: {
+      action: "Hapus Aset",
+      namaAset: existing.namaAset,
+      nomorAset: existing.nomorAset,
+      userId: req.user?.id,
+      catatan: "Aset dibongkar atau dihapus dari sistem",
+    }
+  });
 
-  // Peringatan: Karena onDelete Cascade, kita tidak bisa menyimpan assetLog 
-  // yang merujuk ke assetId yang sudah dihapus tanpa mengubah schema prisma.
-  // Untuk saat ini, kita lewatkan logging DELETE ke assetLog jika asset terhapus.
+  await prisma.asset.delete({ where: { id: String(id) } });
 
   res.status(204).send();
 }
 
 // ── POST /api/assets/:id/photo ────────────────────────────────────────────────
-export async function uploadPhoto(req: Request, res: Response): Promise<void> {
+export async function uploadPhoto(req: AuthRequest, res: Response): Promise<void> {
   const { id } = req.params;
 
   const existing = await prisma.asset.findUnique({ where: { id: String(id) } });
@@ -218,13 +289,35 @@ export async function uploadPhoto(req: Request, res: Response): Promise<void> {
 
   await prisma.assetLog.create({
     data: {
-      action: "PHOTO_UPLOADED",
+      action: "Update Foto",
       assetId: asset.id,
-      catatan: "Foto aset diperbarui",
+      namaAset: asset.namaAset,
+      nomorAset: asset.nomorAset,
+      userId: req.user?.id,
+      oldValue: existing.fotoUrl || "Kosong",
+      newValue: fotoUrl,
+      catatan: `Foto aset diperbarui dari ${existing.fotoUrl || 'Kosong'} menjadi ${fotoUrl}`,
     },
   });
 
   res.json(asset);
+}
+
+// ── GET /api/assets/:id/logs ────────────────────────────────────────────────
+export async function getAssetLogs(req: AuthRequest, res: Response): Promise<void> {
+  const { id } = req.params;
+
+  const logs = await prisma.assetLog.findMany({
+    where: { assetId: String(id) },
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: {
+        select: { name: true }
+      }
+    }
+  });
+
+  res.json(logs);
 }
 
 // ── GET /api/assets/:id/qrcode ────────────────────────────────────────────────

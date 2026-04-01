@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
+import React, { useEffect, useState, useRef, useLayoutEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
   Dimensions,
   Linking,
 } from "react-native";
-import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
+import { useLocalSearchParams, useRouter, useNavigation, useFocusEffect } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as FileSystem from "expo-file-system/legacy";
@@ -36,6 +36,8 @@ export default function AdminAssetDetailScreen() {
   const [deleting, setDeleting] = useState(false);
   const [isImageViewVisible, setIsImageViewVisible] = useState(false);
   const [printingPdf, setPrintingPdf] = useState(false);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
 
   // Delete confirmation modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -73,16 +75,30 @@ export default function AdminAssetDetailScreen() {
     if (id) loadAsset(id);
   }, [id]);
 
+  // Refresh riwayat setiap kali layar kembali aktif (misalnya setelah balik dari Edit)
+  useFocusEffect(
+    useCallback(() => {
+      if (!id) return;
+      assetService.getAssetLogs(id).then(setLogs).catch(() => {});
+    }, [id])
+  );
+
   async function loadAsset(assetId: string) {
     try {
       setLoading(true);
-      const data = await assetService.getById(assetId);
+      setLogsLoading(true);
+      const [data, logsData] = await Promise.all([
+        assetService.getById(assetId),
+        assetService.getAssetLogs(assetId).catch(() => []) 
+      ]);
       setAsset(data);
+      setLogs(logsData);
     } catch {
       Alert.alert("Error", "Aset tidak ditemukan.");
       router.back();
     } finally {
       setLoading(false);
+      setLogsLoading(false);
     }
   }
 
@@ -160,6 +176,8 @@ export default function AdminAssetDetailScreen() {
     try {
       const updated = await assetService.uploadPhoto(assetId, uri);
       setAsset(updated);
+      // Refresh logs setelah upload foto berhasil
+      assetService.getAssetLogs(assetId).then(setLogs).catch(() => {});
       Alert.alert("Berhasil", "Foto aset berhasil diperbarui");
     } catch (error: any) {
       console.log("=== ERROR UPLOAD FOTO ===");
@@ -411,6 +429,88 @@ export default function AdminAssetDetailScreen() {
                 </>
               )}
             </TouchableOpacity>
+          </View>
+
+          {/* Activity Log / Timeline */}
+          <View className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
+            <View className="flex-row items-center mb-4">
+              <Feather name="clock" size={16} color="#64748b" />
+              <Text className="text-sm font-semibold text-gray-700 ml-2">Riwayat Perubahan</Text>
+            </View>
+            
+            {logsLoading ? (
+              <ActivityIndicator size="small" color="#135d3a" />
+            ) : logs.length === 0 ? (
+              <Text className="text-sm text-gray-400 text-center py-4">Belum ada riwayat perubahan.</Text>
+            ) : (
+              <View className="ml-2">
+                {logs.map((log, index) => {
+                  const isLast = index === logs.length - 1;
+                  // Deteksi format gabungan "Edit: Nama, Kondisi, ..."
+                  const isEditAction = log.action?.toLowerCase().startsWith("edit:");
+                  const editedFields = isEditAction
+                    ? log.action.replace(/^edit:\s*/i, "").split(", ")
+                    : [];
+
+                  return (
+                    <View key={log.id} style={{ flexDirection: "row", marginBottom: isLast ? 0 : 16 }}>
+                      {/* Line & Dot column */}
+                      <View style={{ alignItems: "center", marginRight: 12 }}>
+                        <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#135d3a", zIndex: 1 }} />
+                        {!isLast && <View style={{ width: 2, flex: 1, backgroundColor: "#e2e8f0", marginTop: -2, marginBottom: -4 }} />}
+                      </View>
+
+                      {/* Content column */}
+                      <View style={{ flex: 1, paddingBottom: 4 }}>
+                        {/* Action title */}
+                        <Text className="text-sm font-bold text-gray-800">
+                          {isEditAction ? "Data Diubah" : log.action}
+                        </Text>
+
+                        {/* Field badges untuk edit multi-field */}
+                        {isEditAction && editedFields.length > 0 && (
+                          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: 4 }}>
+                            {editedFields.map((f: string) => (
+                              <View key={f} style={{ backgroundColor: "#eff6ff", borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
+                                <Text style={{ fontSize: 10, color: "#3b82f6", fontWeight: "600" }}>{f}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        )}
+
+                        <Text className="text-xs text-gray-500 mt-1">
+                          {new Date(log.createdAt).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })}
+                          {log.user?.name ? ` • oleh ${log.user.name}` : ""}
+                        </Text>
+
+                        {/* Catatan multi-baris (bullet per field) */}
+                        {!!log.catatan && (
+                          <View style={{ marginTop: 8, backgroundColor: "#f8fafc", padding: 10, borderRadius: 10, borderWidth: 1, borderColor: "#e2e8f0" }}>
+                            {log.catatan.split("\n").map((line: string, i: number) => (
+                              <Text key={i} style={{ fontSize: 12, color: "#475569", lineHeight: 18, marginBottom: i < log.catatan.split("\n").length - 1 ? 4 : 0 }}>
+                                {line}
+                              </Text>
+                            ))}
+                          </View>
+                        )}
+
+                        {/* Link foto lama jika ada */}
+                        {log.action === "Update Foto" && log.oldValue && log.oldValue !== "Kosong" && (
+                          <TouchableOpacity
+                            className="mt-2"
+                            onPress={() => {
+                              Linking.openURL(assetService.getPhotoUrl(log.oldValue) || "");
+                            }}
+                          >
+                            <Text className="text-xs text-blue-500 underline">Lihat Foto Lama</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
           </View>
 
           {/* Hapus Aset Button */}

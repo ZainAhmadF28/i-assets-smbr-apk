@@ -28,8 +28,8 @@ export async function getActivityLogs(req: Request, res: Response): Promise<void
     id: log.id,
     action: log.action,
     assetId: log.assetId,
-    assetName: log.asset?.namaAset ?? "Aset Dihapus",
-    assetNomor: log.asset?.nomorAset ?? "-",
+    assetName: log.asset?.namaAset ?? log.namaAset ?? "Aset Dihapus",
+    assetNomor: log.asset?.nomorAset ?? log.nomorAset ?? "-",
     details: log.catatan,
     createdAt: log.createdAt,
   }));
@@ -67,8 +67,8 @@ export async function getNewLogsCount(req: Request, res: Response): Promise<void
   const data = latest.map((log) => ({
     id: log.id,
     action: log.action,
-    assetName: log.asset?.namaAset ?? "Aset Dihapus",
-    assetNomor: log.asset?.nomorAset ?? "-",
+    assetName: log.asset?.namaAset ?? log.namaAset ?? "Aset Dihapus",
+    assetNomor: log.asset?.nomorAset ?? log.nomorAset ?? "-",
     details: log.catatan,
     createdAt: log.createdAt,
   }));

@@ -19,6 +19,12 @@ export const assetService = {
     return response.data;
   },
 
+  // ── GET log / riwayat aset ─────────────────────────────────────────────
+  async getAssetLogs(id: string): Promise<any[]> {
+    const response = await api.get<any[]>(`/api/assets/${id}/logs`);
+    return response.data;
+  },
+
   // ── POST tambah aset baru ─────────────────────────────────────────────
   async create(data: Partial<Asset>): Promise<Asset> {
     const response = await api.post<Asset>("/api/assets", data);

@@ -15,7 +15,7 @@ import { useNotification } from "../../context/NotificationContext";
 
 type ActivityLog = {
   id: string;
-  action: "CREATED" | "UPDATED" | "DELETED" | "PHOTO_UPLOADED";
+  action: string;
   assetId: string | null;
   assetName: string;
   assetNomor: string;
@@ -23,15 +23,33 @@ type ActivityLog = {
   createdAt: string;
 };
 
-const ACTION_CONFIG: Record<
-  ActivityLog["action"],
-  { icon: keyof typeof Feather.glyphMap; color: string; bg: string; label: string }
-> = {
-  CREATED: { icon: "plus-circle", color: "#10b981", bg: "#d1fae5", label: "Ditambahkan" },
-  UPDATED: { icon: "edit-3", color: "#3b82f6", bg: "#dbeafe", label: "Diperbarui" },
-  DELETED: { icon: "trash-2", color: "#ef4444", bg: "#fee2e2", label: "Dihapus" },
-  PHOTO_UPLOADED: { icon: "camera", color: "#8b5cf6", bg: "#ede9fe", label: "Foto Diupload" },
-};
+type ActionConfig = { icon: keyof typeof Feather.glyphMap; color: string; bg: string; label: string };
+
+const DEFAULT_CONFIG: ActionConfig = { icon: "activity", color: "#64748b", bg: "#f1f5f9", label: "Diperbarui" };
+
+function getActionConfig(action: string): ActionConfig {
+  const key = action?.toLowerCase() ?? "";
+  if (key === "created" || key.includes("tambah") || key.includes("ditambahkan"))
+    return { icon: "plus-circle", color: "#10b981", bg: "#d1fae5", label: "Ditambahkan" };
+  if (key === "deleted" || key.includes("hapus"))
+    return { icon: "trash-2", color: "#ef4444", bg: "#fee2e2", label: "Dihapus" };
+  if (key === "photo_uploaded" || key.includes("foto") || key.includes("photo"))
+    return { icon: "camera", color: "#8b5cf6", bg: "#ede9fe", label: "Foto Diupload" };
+  // Format gabungan: "Edit: Nama, Kondisi, ..."
+  if (key.startsWith("edit:"))
+    return { icon: "edit-3", color: "#3b82f6", bg: "#dbeafe", label: "Data Diubah" };
+  if (key.includes("nama"))
+    return { icon: "type", color: "#f59e0b", bg: "#fef3c7", label: "Nama Diubah" };
+  if (key.includes("nomor"))
+    return { icon: "hash", color: "#f59e0b", bg: "#fef3c7", label: "Nomor Diubah" };
+  if (key.includes("kondisi"))
+    return { icon: "shield", color: "#3b82f6", bg: "#dbeafe", label: "Kondisi Diubah" };
+  if (key.includes("lokasi") || key.includes("site") || key.includes("koordinat") || key.includes("latitude") || key.includes("longitude"))
+    return { icon: "map-pin", color: "#14b8a6", bg: "#ccfbf1", label: "Lokasi Diubah" };
+  if (key === "updated" || key.includes("perbarui") || key.includes("pembaruan") || key.includes("update"))
+    return { icon: "edit-3", color: "#3b82f6", bg: "#dbeafe", label: "Diperbarui" };
+  return DEFAULT_CONFIG;
+}
 
 function timeAgo(dateString: string): string {
   const diff = Date.now() - new Date(dateString).getTime();
@@ -125,7 +143,7 @@ export default function ActivityLogScreen() {
   const groups = groupByDate(logs);
 
   const renderItem = ({ item }: { item: ActivityLog }) => {
-    const config = ACTION_CONFIG[item.action];
+    const config = getActionConfig(item.action);
     return (
       <TouchableOpacity
         activeOpacity={0.7}

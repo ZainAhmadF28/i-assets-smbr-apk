@@ -69,15 +69,17 @@ enum Kondisi {
 
 model AssetLog {
   id        String   @id @default(uuid())
-  assetId   String   @map("asset_id")
+  assetId   String?  @map("asset_id")
+  namaAset  String?  @db.VarChar(255) @map("nama_aset")
+  nomorAset String?  @db.VarChar(255) @map("nomor_aset")
   userId    String?  @map("user_id")
-  action    String
+  action    String   @db.VarChar(255)
   oldValue  String?  @map("old_value")
   newValue  String?  @map("new_value")
-  catatan   String?
+  catatan   String?  
   createdAt DateTime @default(now()) @map("created_at")
 
-  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  asset     Asset?   @relation(fields: [assetId], references: [id], onDelete: SetNull)
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@map("asset_logs")
