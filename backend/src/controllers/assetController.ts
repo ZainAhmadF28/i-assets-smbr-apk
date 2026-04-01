@@ -114,8 +114,6 @@ export async function createAsset(req: AuthRequest, res: Response): Promise<void
     data: {
       action: "Tambah Aset",
       assetId: asset.id,
-      namaAset: asset.namaAset,
-      nomorAset: asset.nomorAset,
       userId: req.user?.id,
       catatan: `Aset baru ditambahkan — kelas SIG ${asset.kelasAsetSig || '-'}, kondisi ${asset.kondisi}`,
     },
@@ -210,8 +208,6 @@ export async function updateAsset(req: AuthRequest, res: Response): Promise<void
     await prisma.assetLog.create({
       data: {
         assetId: asset.id,
-        namaAset: asset.namaAset,
-        nomorAset: asset.nomorAset,
         userId: req.user?.id,
         action: `Edit: ${fieldList}`,
         catatan: catatanLines,
@@ -223,8 +219,6 @@ export async function updateAsset(req: AuthRequest, res: Response): Promise<void
     await prisma.assetLog.create({
       data: {
         assetId: asset.id,
-        namaAset: asset.namaAset,
-        nomorAset: asset.nomorAset,
         userId: req.user?.id,
         action: "Pembaruan Data",
         catatan: "Tidak ada perubahan data yang terdeteksi.",
@@ -245,16 +239,15 @@ export async function deleteAsset(req: AuthRequest, res: Response): Promise<void
     return;
   }
 
-  // Buat log terlebih dahulu agar masih merujuk ke data yang benar
-  // Meski relasi akan putus saat delete (SetNull), namaAset dan tabel akan tetap tersimpan
+  // Log dibuat sebelum delete agar assetId masih valid
+  // (CASCADE akan hapus log ini juga, tapi setidaknya proses tidak crash)
   await prisma.assetLog.create({
     data: {
-      action: "Hapus Aset",
-      namaAset: existing.namaAset,
-      nomorAset: existing.nomorAset,
+      assetId: existing.id,
       userId: req.user?.id,
-      catatan: "Aset dibongkar atau dihapus dari sistem",
-    }
+      action: "Hapus Aset",
+      catatan: `Aset "${existing.namaAset}" (${existing.nomorAset}) dihapus dari sistem`,
+    },
   });
 
   await prisma.asset.delete({ where: { id: String(id) } });
@@ -289,14 +282,12 @@ export async function uploadPhoto(req: AuthRequest, res: Response): Promise<void
 
   await prisma.assetLog.create({
     data: {
-      action: "Update Foto",
       assetId: asset.id,
-      namaAset: asset.namaAset,
-      nomorAset: asset.nomorAset,
       userId: req.user?.id,
+      action: "Update Foto",
       oldValue: existing.fotoUrl || "Kosong",
       newValue: fotoUrl,
-      catatan: `Foto aset diperbarui dari ${existing.fotoUrl || 'Kosong'} menjadi ${fotoUrl}`,
+      catatan: `Foto aset diperbarui`,
     },
   });
 
