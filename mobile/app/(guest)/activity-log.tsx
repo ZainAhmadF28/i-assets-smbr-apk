@@ -131,7 +131,7 @@ export default function ActivityLogScreen() {
         activeOpacity={0.7}
         onPress={() => {
           if (item.assetId) {
-            router.push(`/(guest)/asset/${item.assetId}` as any);
+            router.push(`/(admin)/asset/${item.assetId}` as any);
           }
         }}
         style={{
