@@ -2,7 +2,7 @@
   "expo": {
     "name": "I-Asset SMBR",
     "slug": "i-asset-smbr",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "scheme": "iasset",
     "orientation": "portrait",
     "icon": "./assets/logoAPK.png",
@@ -17,13 +17,14 @@
       "bundleIdentifier": "com.smbr.iasset"
     },
     "android": {
+      "package": "com.smbr.iasset",
+      "versionCode": 2,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/logoAPK.png",
         "monochromeImage": "./assets/logoAPK.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.smbr.iasset",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
