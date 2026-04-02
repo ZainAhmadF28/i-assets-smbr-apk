@@ -52,7 +52,8 @@
           "photosPermission": "I-Asset SMBR membutuhkan akses galeri untuk foto aset.",
           "cameraPermission": "I-Asset SMBR membutuhkan akses kamera untuk foto aset."
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
