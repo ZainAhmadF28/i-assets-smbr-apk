@@ -30,7 +30,7 @@ async function main() {
     where: { email: 'user@semenbaturaja.co.id' },
     update: {
       password: hashedUserPassword // <--- Tambahkan agar database menimpa pwd lama
-    },
+    }, 
     create: {
       name:     'User Biasa',
       email:    'user@semenbaturaja.co.id',
