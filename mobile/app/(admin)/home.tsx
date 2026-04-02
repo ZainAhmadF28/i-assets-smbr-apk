@@ -85,12 +85,12 @@ const COLS_LOG = [
 
 // ─── CRUD form ────────────────────────────────────────────────────────────────
 type FormState = {
-  nomorAset: string; namaAset: string; kelasAsetSig: string;
+  nomorAset: string; namaAset: string; kodeKelas: string; kelasAsetSmbr: string; kelasAsetSig: string;
   qty: string; satuan: string; site: string; kondisi: Kondisi;
   keterangan: string; latitude: string; longitude: string;
 };
 const BLANK_FORM: FormState = {
-  nomorAset: "", namaAset: "", kelasAsetSig: "BANGUNAN",
+  nomorAset: "", namaAset: "", kodeKelas: "", kelasAsetSmbr: "", kelasAsetSig: "BANGUNAN",
   qty: "1", satuan: "Unit", site: "", kondisi: "BAIK",
   keterangan: "", latitude: "", longitude: "",
 };
@@ -225,6 +225,7 @@ export default function AdminHomeScreen() {
     setEditingAsset(asset);
     setForm({
       nomorAset: asset.nomorAset ?? "", namaAset: asset.namaAset ?? "",
+      kodeKelas: asset.kodeKelas ?? "", kelasAsetSmbr: asset.kelasAsetSmbr ?? "",
       kelasAsetSig: asset.kelasAsetSig ?? "BANGUNAN", qty: String(asset.qty ?? 1),
       satuan: asset.satuan ?? "Unit", site: asset.site ?? "", kondisi: asset.kondisi ?? "BAIK",
       keterangan: asset.keterangan ?? "",
@@ -262,6 +263,7 @@ export default function AdminHomeScreen() {
     setSaving(true);
     const payload: Partial<Asset> = {
       nomorAset: form.nomorAset.trim(), namaAset: form.namaAset.trim(),
+      kodeKelas: form.kodeKelas.trim() || undefined, kelasAsetSmbr: form.kelasAsetSmbr.trim() || undefined,
       kelasAsetSig: form.kelasAsetSig, qty: Number(form.qty),
       satuan: form.satuan.trim() || "Unit", site: form.site.trim() || null,
       kondisi: form.kondisi, keterangan: form.keterangan.trim() || null,
@@ -544,6 +546,10 @@ export default function AdminHomeScreen() {
               <ScrollView style={{ padding: 20 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                 <FormField label="Nomor Aset" required value={form.nomorAset} onChangeText={v => setField("nomorAset", v)} placeholder="Contoh: 141310000238" error={formErrors.nomorAset} />
                 <FormField label="Nama Aset" required value={form.namaAset} onChangeText={v => setField("namaAset", v)} placeholder="Contoh: Pos Satpam" error={formErrors.namaAset} multiline />
+                
+                <FormField label="Kode Kelas" value={form.kodeKelas} onChangeText={(v) => setField("kodeKelas", v)} placeholder="Contoh: 31.1.01" />
+                <FormField label="Kelas SMBR" value={form.kelasAsetSmbr} onChangeText={(v) => setField("kelasAsetSmbr", v)} placeholder="Contoh: Tanah" />
+
                 <Text style={labelStyle}>Kategori <Text style={{ color: "#ef4444" }}>*</Text></Text>
                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
                   {KATEGORI_OPTIONS.map(opt => (

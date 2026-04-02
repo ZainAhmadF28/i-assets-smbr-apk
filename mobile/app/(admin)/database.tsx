@@ -23,6 +23,8 @@ import type { Asset, Kondisi } from "@shared-types/index";
 type FormState = {
   nomorAset: string;
   namaAset: string;
+  kodeKelas: string;
+  kelasAsetSmbr: string;
   kelasAsetSig: string;
   qty: string;
   satuan: string;
@@ -64,6 +66,8 @@ const KONDISI_COLOR: Record<Kondisi, string> = {
 const BLANK_FORM: FormState = {
   nomorAset: "",
   namaAset: "",
+  kodeKelas: "",
+  kelasAsetSmbr: "",
   kelasAsetSig: "BANGUNAN",
   qty: "1",
   satuan: "Unit",
@@ -176,6 +180,8 @@ export default function DatabaseScreen() {
     setForm({
       nomorAset: asset.nomorAset ?? "",
       namaAset: asset.namaAset ?? "",
+      kodeKelas: asset.kodeKelas ?? "",
+      kelasAsetSmbr: asset.kelasAsetSmbr ?? "",
       kelasAsetSig: asset.kelasAsetSig ?? "BANGUNAN",
       qty: String(asset.qty ?? 1),
       satuan: asset.satuan ?? "Unit",
@@ -232,6 +238,8 @@ export default function DatabaseScreen() {
     const payload: Partial<Asset> = {
       nomorAset: form.nomorAset.trim(),
       namaAset: form.namaAset.trim(),
+      kodeKelas: form.kodeKelas.trim() || undefined,
+      kelasAsetSmbr: form.kelasAsetSmbr.trim() || undefined,
       kelasAsetSig: form.kelasAsetSig,
       qty: Number(form.qty),
       satuan: form.satuan.trim() || "Unit",
@@ -630,6 +638,20 @@ export default function DatabaseScreen() {
                   placeholder="Contoh: Pos Satpam Mess"
                   error={formErrors.namaAset}
                   multiline
+                />
+
+                <FormField
+                  label="Kode Kelas"
+                  value={form.kodeKelas}
+                  onChangeText={(v) => setField("kodeKelas", v)}
+                  placeholder="Contoh: 1413"
+                />
+                
+                <FormField
+                  label="Kelas SMBR"
+                  value={form.kelasAsetSmbr}
+                  onChangeText={(v) => setField("kelasAsetSmbr", v)}
+                  placeholder="Contoh: Bangunan Tempat Kerja"
                 />
 
                 {/* Kategori */}

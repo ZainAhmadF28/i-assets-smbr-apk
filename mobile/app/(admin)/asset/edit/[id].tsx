@@ -42,6 +42,8 @@ export default function EditAssetScreen() {
   const [form, setForm] = useState({
     nomorAset: "",
     namaAset: "",
+    kodeKelas: "",
+    kelasAsetSmbr: "",
     kelasAsetSig: "BANGUNAN",
     qty: "1",
     satuan: "Unit",
@@ -64,6 +66,8 @@ export default function EditAssetScreen() {
       setForm({
         nomorAset: asset.nomorAset,
         namaAset: asset.namaAset,
+        kodeKelas: asset.kodeKelas || "",
+        kelasAsetSmbr: asset.kelasAsetSmbr || "",
         kelasAsetSig: asset.kelasAsetSig || "BANGUNAN",
         qty: String(asset.qty),
         satuan: asset.satuan || "Unit",
@@ -125,6 +129,8 @@ export default function EditAssetScreen() {
       await assetService.update(id, {
         nomorAset: form.nomorAset.trim(),
         namaAset: form.namaAset.trim(),
+        kodeKelas: form.kodeKelas.trim() || null,
+        kelasAsetSmbr: form.kelasAsetSmbr.trim() || null,
         kelasAsetSig: form.kelasAsetSig,
         qty: Number(form.qty),
         satuan: form.satuan.trim() || "Unit",
@@ -166,6 +172,9 @@ export default function EditAssetScreen() {
           <Text className="text-sm font-semibold text-gray-700 mb-3">Data Aset</Text>
           <InputField label="Nomor Aset" required placeholder="Contoh: 141310000238" value={form.nomorAset} onChangeText={(v) => setField("nomorAset", v)} error={errors.nomorAset} />
           <InputField label="Nama Aset" required placeholder="Contoh: Pos Satpam Mess" value={form.namaAset} onChangeText={(v) => setField("namaAset", v)} error={errors.namaAset} multiline />
+
+          <InputField label="Kode Kelas" placeholder="Contoh: 1413" value={form.kodeKelas} onChangeText={(v) => setField("kodeKelas", v)} error={errors.kodeKelas} />
+          <InputField label="Kelas SMBR" placeholder="Contoh: Bangunan Tempat Kerja" value={form.kelasAsetSmbr} onChangeText={(v) => setField("kelasAsetSmbr", v)} error={errors.kelasAsetSmbr} />
 
           <Text className="text-sm font-medium text-gray-700 mb-2">
             Kategori <Text className="text-red-500">*</Text>
